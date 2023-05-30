@@ -1,7 +1,7 @@
-# etd-base-template
-python template for etd projects
+# etd_dash_service
+A Python service that moves ETD data into DASH.
 
-<img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cgoines/68bd7e7d15e4025d7bf71431bad92771/raw/covbadge.json">
+<img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ives1227/3793013399189da4ff780f263984506c/raw/covbadge.json">
 
 ### References
 
