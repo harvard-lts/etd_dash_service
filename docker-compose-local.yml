@@ -12,6 +12,7 @@ services:
       dockerfile: './DockerfileLocal'
     volumes:
       - './:/home/etdadm'
+      - '/tmp:/tmp'
     env_file:
       - '.env'
     environment:
