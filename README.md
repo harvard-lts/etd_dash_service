@@ -27,7 +27,7 @@ A Python service that moves ETD data into DASH.
 `pip install celery`  
 `python3 scripts/invoke-task.py`
 
-- look for `etd_in_storage` queue, and get the message
+- look for `etd_in_storage` queue, and get the message in the rabbit ui
 - and/or tail ./logs/etd/<containerid>supervisord_queuelistener_stderr.log to see activity
 
 - Known issue: dropping a message directly on the `etd_submission_ready` queue not being properly read by task, nor progressing it to the next queue. Must run script.
