@@ -8,8 +8,7 @@ A Python service that moves ETD data into DASH.
 - Coverage badge adapted from [Ned Batchelder](https://nedbatchelder.com/blog/202209/making_a_coverage_badge.html)
 
 
-###
-Run hello world example
+### Run hello world example
 
 - Clone github 
 - Checkout ETD-166 branch
@@ -24,7 +23,7 @@ Run hello world example
 - bring up DEV ETD Rabbit UI
 - look for `etd_submission_ready` queue
 
-- run invoke task python script  (celery must be installed locally)
+- run invoke task python script  (celery must be installed locally)  
 `pip install celery`  
 `python3 scripts/invoke-task.py`
 
