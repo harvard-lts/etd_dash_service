@@ -1,0 +1,29 @@
+# Build all images and run all containers
+# `docker-compose -f docker-compose-local.yml up -d --build --force-recreate`
+
+version: '3.7'
+
+services:
+
+  etd-dash-service:
+    container_name: 'etd-dash-service'
+    build:
+      context: './'
+      dockerfile: './DockerfileLocal'
+    volumes:
+      - './:/home/etdadm'
+    env_file:
+      - '.env'
+    environment:
+      QUEUE_NAME: etd_submission_ready
+      NEXT_QUEUE_NAME: etd_in_storage  
+    ports:
+      # Worker API
+      - '10600:8081'
+    networks:
+      - etd-net
+
+# Create a custom docker network if it does not exist already
+networks:
+ etd-net:
+    name: etd-net
