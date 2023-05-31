@@ -24,7 +24,8 @@ Run hello world example
 - bring up DEV ETD Rabbit UI
 - look for `etd_submission_ready` queue
 
-- run invoke task python script  
+- run invoke task python script  (celery must be installed locally)
+`pip install celery`  
 `python3 scripts/invoke-task.py`
 
 - look for `etd_in_storage` queue, and get the message
