@@ -5,3 +5,6 @@ result_serializer='json'
 timezone='US/Eastern'
 enable_utc=True
 worker_enable_remote_control=False
+task_routes = {
+    'etd-dash-service.tasks.send_to_dash': {'queue': 'etd_submission_ready'}
+}
