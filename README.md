@@ -1,4 +1,4 @@
-# etd_dash_service
+# ETD DASH Service
 A Python service that moves ETD data into DASH.
 
 <img src="https://github.com/harvard-lts/etd-base-template/actions/workflows/pytest.yml/badge.svg">
@@ -20,7 +20,7 @@ A Python service that moves ETD data into DASH.
 - Start up docker  
 `docker-compose -f docker-compose-local.yml up --build -d --force-recreate`
 
-- Bring up DEV ETD Rabbit UI (https://b-7ecc68cb-6f33-40d6-8c57-0fbc0b84fa8c.mq.us-east-1.amazonaws.com/)
+- Bring up [DEV ETD Rabbit UI](https://b-7ecc68cb-6f33-40d6-8c57-0fbc0b84fa8c.mq.us-east-1.amazonaws.com/)
 - Look for `CONSUME_QUEUE_NAME` queue
 
 - Exec into the docker container
