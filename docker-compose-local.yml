@@ -15,9 +15,6 @@ services:
       - '/tmp:/tmp'
     env_file:
       - '.env'
-    environment:
-      QUEUE_NAME: etd_submission_ready
-      NEXT_QUEUE_NAME: etd_in_storage  
     ports:
       # Worker API
       - '10600:8081'

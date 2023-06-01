@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y libpq-dev gcc python-dev supervisor ngi
             -out /etc/nginx/ssl/nginx.cert && \
   chmod -R 755 /etc/nginx/ssl/ && \
   pip install --upgrade pip && \
-  pip install gunicorn && \
   pip install --upgrade --force-reinstall -r /tmp/requirements.txt -i https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/
 
 RUN useradd --create-home etdadm
@@ -23,9 +22,9 @@ WORKDIR /home/etdadm
 COPY --chown=etdadm ./ .
 
 # Update permissions for the etdadm user and group
-#COPY change_id.sh /root/change_id.sh
-#RUN chmod 755 /root/change_id.sh && \
-#  /root/change_id.sh -u 193 -g 199
+COPY change_id.sh /root/change_id.sh
+RUN chmod 755 /root/change_id.sh && \
+  /root/change_id.sh -u 55031 -g 55031
 
 # Supervisor to run and manage multiple apps in the same container
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
