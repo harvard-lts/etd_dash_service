@@ -10,7 +10,7 @@ def send_to_dash(message):
     message = {"Hello": "World"}
     print("Hello World")
     app.send_task("tasks.tasks.do_task", args=[message], kwargs={},
-              queue=os.getenv('NEXT_QUEUE_NAME'))
+                  queue=os.getenv('NEXT_QUEUE_NAME'))
 
 
 if __name__ == '__main__':
