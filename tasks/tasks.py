@@ -12,6 +12,6 @@ def send_to_dash(message):
     app.send_task("tasks.tasks.do_task", args=[message], kwargs={},
                   queue=os.getenv('PUBLISH_QUEUE_NAME'))
 
+
 if __name__ == '__main__':
     app.start()
-
