@@ -1,7 +1,7 @@
 # ETD DASH Service
 A Python service that moves ETD data into DASH.
 
-<img src="https://github.com/harvard-lts/etd-base-template/actions/workflows/pytest.yml/badge.svg">
+<img src="https://github.com/harvard-lts/etd_dash_service/actions/workflows/pytest.yml/badge.svg">
 
 <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ives1227/3793013399189da4ff780f263984506c/raw/covbadge.json">
 
