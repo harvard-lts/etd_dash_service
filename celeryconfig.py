@@ -8,6 +8,6 @@ timezone = 'US/Eastern'
 enable_utc = True
 worker_enable_remote_control = False
 task_routes = {
-    'etd-dash-service.tasks.send_to_dash': 
+    'etd-dash-service.tasks.send_to_dash':
         {'queue': os.getenv("CONSUME_QUEUE_NAME")}
 }
