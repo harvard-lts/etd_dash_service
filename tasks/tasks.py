@@ -15,4 +15,3 @@ def send_to_dash(message):
 
 if __name__ == '__main__':
     app.start()
-    
