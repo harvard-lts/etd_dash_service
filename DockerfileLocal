@@ -2,6 +2,7 @@ FROM python:3.8-slim-buster
 
 COPY requirements.txt /tmp/
 
+ENV QUEUE_NAME=$QUEUE_NAME
 RUN apt-get update && apt-get install -y libpq-dev gcc python-dev supervisor nginx openssl curl && \
   mkdir -p /etc/nginx/ssl/ && \
   openssl req \
@@ -24,7 +25,8 @@ COPY --chown=etdadm ./ .
 # Update permissions for the etdadm user and group
 COPY change_id.sh /root/change_id.sh
 RUN chmod 755 /root/change_id.sh && \
-  /root/change_id.sh -u 55031 -g 55031
+  /root/change_id.sh -u 55031 -g 55031 &&\
+  echo '${$QUEUE_NAME}'
 
 # Supervisor to run and manage multiple apps in the same container
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
