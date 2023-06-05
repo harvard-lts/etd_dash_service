@@ -15,6 +15,8 @@ services:
       - '/tmp:/tmp'
     env_file:
       - '.env'
+    environment:
+      - QUEUE_NAME='tester'
     ports:
       # Worker API
       - '10600:8081'
