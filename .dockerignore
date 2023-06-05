@@ -1,0 +1,4 @@
+.env*
+DockerfileLocal
+Dockerfile
+docker-compose*
