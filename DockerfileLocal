@@ -28,4 +28,4 @@ RUN chmod 755 /root/change_id.sh && \
 
 USER etdadm
 
-CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "etd_submission_ready_mjv"]
+CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "etd_submission_ready"]
