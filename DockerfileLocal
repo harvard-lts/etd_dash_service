@@ -26,9 +26,6 @@ COPY change_id.sh /root/change_id.sh
 RUN chmod 755 /root/change_id.sh && \
   /root/change_id.sh -u 55031 -g 55031
 
-# Supervisor to run and manage multiple apps in the same container
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 USER etdadm
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "etd_submission_ready_mjv"]
