@@ -29,7 +29,7 @@ A Python service that moves ETD data into DASH.
 `python3 scripts/invoke-task.py`
 
 - Look for `PUBLISH_QUEUE_NAME` queue, and get the message in the RabbitMQ UI
-- and/or tail ./logs/etd/{containerid}supervisord_queuelistener_stderr.log to see activity
+- and/or tail <NEED LOG INFO> to see activity
 
 
 ### Manually placing a message on the queue
