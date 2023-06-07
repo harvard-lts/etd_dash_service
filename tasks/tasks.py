@@ -10,5 +10,5 @@ def send_to_dash(message):
     print("message")
     print(message)
     new_message = {"hello": "from etd-dash-service"}
-    app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
+    app.send_task("etd-alma-service.tasks.send_to_alma", args=[new_message], kwargs={},
                   queue=os.getenv('PUBLISH_QUEUE_NAME'))
