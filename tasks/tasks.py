@@ -1,12 +1,13 @@
 from celery import Celery
 import os
 import logging
-from etd.logging_config import configure_logger
+#from etd.logging_config import configure_logger
+import etd
 
 app = Celery()
 app.config_from_object('celeryconfig')
-configure_logger()
-logger = logging.getLogger('etd')
+etd.configure_logger()
+logger = logging.getLogger('etd_dash')
 #app.log.setup(logger=celery_logger)
 
 @app.task(serializer='json', name='etd-dash-service.tasks.send_to_dash')
