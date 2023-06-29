@@ -6,7 +6,7 @@ LOG_FILE_BACKUP_COUNT = os.getenv('LOG_FILE_BACKUP_COUNT')
 LOG_ROTATION = "midnight"
 
 
-def configure_logger():
+def configure_logger():  # pragma: no cover
     log_level = os.getenv("APP_LOG_LEVEL", "WARNING")
     log_file_path = os.getenv("LOGFILE_PATH",
                               "/home/etdadm/logs/etd_dash/etd_dash.log")
