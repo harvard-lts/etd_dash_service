@@ -15,6 +15,9 @@ services:
       - '/tmp:/tmp'
     env_file:
       - '.env'
+    environment:
+      - CELERY_LOG_LEVEL=DEBUG
+      - CONSUME_QUEUE_NAME=etd_submission_ready_dd
     ports:
       # Worker API
       - '10600:8081'

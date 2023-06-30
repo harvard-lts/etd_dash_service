@@ -1,5 +1,6 @@
 FROM python:3.11-slim-buster
 
+ENV CELERY_LOG_LEVEL=$CELERY_LOG_LEVEL
 COPY requirements.txt /tmp/
 
 RUN apt-get update && apt-get install -y libpq-dev gcc python-dev supervisor nginx openssl curl && \
@@ -28,4 +29,4 @@ RUN chmod 755 /root/change_id.sh && \
 
 USER etdadm
 
-CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "etd_submission_ready"]
+CMD celery -A tasks.tasks worker -E --loglevel=$CELERY_LOG_LEVEL --queues $CONSUME_QUEUE_NAME
