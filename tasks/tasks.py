@@ -9,6 +9,7 @@ app.config_from_object('celeryconfig')
 etd.configure_logger()
 logger = logging.getLogger('etd_dash')
 
+
 @app.task(serializer='json', name='etd-dash-service.tasks.send_to_dash')
 def send_to_dash(message):
     logger.info("message")

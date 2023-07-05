@@ -1,9 +1,14 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
+import socket
+from datetime import datetime
 
 LOG_FILE_BACKUP_COUNT = os.getenv('LOG_FILE_BACKUP_COUNT')
 LOG_ROTATION = "midnight"
+
+container_id = socket.gethostname()
+timestamp = datetime.today().strftime('%Y-%m-%d')
 
 
 def configure_logger():  # pragma: no cover
@@ -20,7 +25,7 @@ def configure_logger():  # pragma: no cover
     logger.addHandler(console_handler)
     if os.getenv("CONSOLE_LOGGING_ONLY", "false") == "false":
         file_handler = TimedRotatingFileHandler(
-            filename=log_file_path,
+            filename=f"{log_file_path}/{container_id}_console_{timestamp}.log",
             when=LOG_ROTATION,
             backupCount=LOG_FILE_BACKUP_COUNT
         )
