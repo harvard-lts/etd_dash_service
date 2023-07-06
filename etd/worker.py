@@ -2,7 +2,7 @@ import os
 import requests
 
 """
-This is a template of a basic worker class for etds.
+This is a basic worker class.
 
 Since: 2023-05-23
 Author: cgoines
