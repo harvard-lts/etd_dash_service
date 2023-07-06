@@ -2,7 +2,6 @@ from celery import Celery
 import os
 import logging
 import etd
-import json
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -14,10 +13,9 @@ DASH_FEATURE_FLAG = "dash_feature_flag"
 
 
 @app.task(serializer='json', name='etd-dash-service.tasks.send_to_dash')
-def send_to_dash(message):
+def send_to_dash(json_message):
     logger.info("message")
-    logger.info(message)
-    json_message = json.loads(message)
+    logger.info(json_message)
     new_message = {"hello": "from etd-dash-service"}
     if FEATURE_FLAGS in json_message:
         feature_flags = json_message[FEATURE_FLAGS]
