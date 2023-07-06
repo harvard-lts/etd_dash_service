@@ -10,8 +10,8 @@ arguments = {"hello": "world", "feature_flags": {
             'alma_feature_flag': "off",
             'send_to_drs_feature_flag': "off",
             'drs_holding_record_feature_flag': "off"}}
-json_args = json.dumps(arguments)
+#json_args = json.dumps(arguments)
 
 res = app1.send_task('etd-dash-service.tasks.send_to_dash',
-                     args=[json_args], kwargs={},
+                     args=[arguments], kwargs={},
                      queue=os.getenv("CONSUME_QUEUE_NAME"))

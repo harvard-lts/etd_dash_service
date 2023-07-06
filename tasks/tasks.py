@@ -17,7 +17,8 @@ DASH_FEATURE_FLAG = "dash_feature_flag"
 def send_to_dash(message):
     logger.info("message")
     logger.info(message)
-    json_message = json.loads(message)
+    #json_message = json.loads(message)
+    json_message = message
     new_message = {"hello": "from etd-dash-service"}
     if FEATURE_FLAGS in json_message:
         feature_flags = json_message[FEATURE_FLAGS]
