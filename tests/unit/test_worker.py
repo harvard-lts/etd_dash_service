@@ -1,6 +1,6 @@
 from etd.worker import Worker
 import requests
-
+import unittest
 
 class MockResponse:
     text = "REST api is running."
@@ -37,3 +37,10 @@ class TestWorkerClass():
         worker = Worker()
         msg = worker.call_api()
         assert msg != expected_msg
+
+    @unittest.skip("Need to get sftp key in place")
+    def test_send_to_dash(self):
+        expected_resp = "success"
+        worker = Worker()
+        resp = worker.send_to_dash({"hello": "world"})
+        assert resp == expected_resp

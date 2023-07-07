@@ -2,6 +2,7 @@ from celery import Celery
 import os
 import logging
 import etd
+from etd.worker import Worker
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -24,6 +25,10 @@ def send_to_dash(json_message):
                 feature_flags[DASH_FEATURE_FLAG] == "on":
             # Send to DASH
             logger.debug("FEATURE IS ON>>>>>SEND TO DASH")
+            worker = Worker()
+            msg = worker.send_to_dash(json_message)
+            logger.debug(msg)
+
         else:
             # Feature is off so do hello world
             logger.debug("FEATURE FLAGS FOUND")
