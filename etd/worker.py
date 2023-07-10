@@ -2,14 +2,14 @@ import requests
 import logging
 import os
 
-# import lxml.etree as xmlTree
+import lxml.etree as xmlTree
 # import os, re, sys, shutil, xml.sax
 import re
 from datetime import datetime
 from subprocess import run, PIPE
 from vireo import instance_data
 # from glob import glob
-# from shlex import quote
+from shlex import quote
 
 """
 This is a basic worker class.
@@ -24,6 +24,18 @@ class Worker():
     logger = logging.getLogger('etd_dash')
     aipPattern = '.+_(\\d+).zip'
     reAipPackage = re.compile(aipPattern)
+    datePattern = '\\d{5}(-\\d\\d-\\d\\d)'
+    re5digitDate = re.compile(datePattern)
+    dspaceHome = "/home/dspace"
+    DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
+    dspaceImportDir = f'{dspaceHome}/import'
+    dspaceHost = os.getenv("dspaceHost")
+    importUserName = 'dspace'
+    DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
+    handler2nrs = '/home/osc/proj/dashdump/data/tsv/handle2nrs.tsv'
+    dimNamespace = '{http://www.dspace.org/xmlns/dspace/dim}'
+    rightsNamespace = '{http://cosimo.stanford.edu/sdr/metsrights/}'
+    dropboxUser = 'proquest'
 
     def __init__(self):
         self.version = os.getenv("APP_VERSION", "0.0.1")
@@ -48,9 +60,6 @@ class Worker():
         filesDir = 'files'
         csvEtds2Alma = os.path.join(filesDir, 'etds2alma.csv')
         etds2AlmaOut = open(csvEtds2Alma, 'a+')
-        dspaceHome = "/home/dspace"
-        dspaceImportDir = f'{dspaceHome}/import'
-        importUserName = 'dspace'
 
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
@@ -66,7 +75,7 @@ class Worker():
             if match:
                 self.submissionId = match.group(1)
             else:
-                # notifyJM.log('fail', f'File name {aipFile} 
+                # notifyJM.log('fail', f'File name {aipFile}
                 # is not supported', verbose)
                 self.logger.error(f'File name {aipFile} is not supported')
                 continue
@@ -74,15 +83,15 @@ class Worker():
             # Unpack AIP package
             proc = self.sh(['unzip', aipFile])
             if proc.returncode > 0:
-                # notifyJM.log('fail', f"Failed to 
+                # notifyJM.log('fail', f"Failed to
                 # unzip {aipDir}/{aipFile}", verbose)
                 self.logger.error(f"Failed to unzip {aipDir}/{aipFile}")
                 continue
 
             os.remove(aipFile)
-            
+
             # Rewrite mets file remapping a few elements
-            if not self.rewrite_mets(aipDir, batch, schoolCode): 
+            if not self.rewrite_mets(aipDir, batch, schoolCode):
                 continue
 
             # Zip package back up with updated mets file
@@ -91,82 +100,97 @@ class Worker():
                 zipWithArgs.append(file)
             proc = self.sh(zipWithArgs)
             if proc.returncode > 0:
-                # notifyJM.log('fail', f"The command {zipWithArgs} 
+                # notifyJM.log('fail', f"The command {zipWithArgs}
                 # failed in {aipDir}", verbose)
                 self.logger.error(f"The command {zipWithArgs} \
                                   failed in {aipDir}")
                 continue
-            
+
             proquestOutDir = aipDir.replace('/in/', '/out/')
             if not os.path.isdir(proquestOutDir):
                 try:
                     os.makedirs(proquestOutDir)
                 except Exception as e:
-                    # notifyJM.log('fail', f'Failed to 
+                    # notifyJM.log('fail', f'Failed to
                     # create {proquestOutDir}', verbose)
                     self.logger.error(f'Failed to create \
                                       {proquestOutDir}: {e}')
                     continue
 
             collection_handle = instance_data[schoolCode]['handle']
-            dashImportFile = f'{dspaceImportDir}/proquest/' + aipFile		
-            proc = self.sh(['scp', '-r', aipFile, f'{importUserName} \
-                            @{dspaceHost}:{dashImportFile}'])
+            dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
+            proc = self.sh(['scp', '-r', aipFile, f'{self.importUserName} \
+                            @{self.dspaceHost}:{dashImportFile}'])
             if proc.returncode == 0:
-                # notifyJM.log('pass', f"Copied AIP package to 
+                # notifyJM.log('pass', f"Copied AIP package to
                 # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
-                self.logger.info(f"Copied AIP package to {importUserName} \
-                                 @{dspaceHost}:{dashImportFile}")
+                self.logger.info(f"Copied AIP package to \
+                                 {self.importUserName} \
+                                 @{self.dspaceHost}:{dashImportFile}")
             else:
                 # notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
                 # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
                 self.logger.error("Failed to send {aipDir}/{aipFile} to \
-                                  {importUserName}@{dspaceHost}:{dashImportFile}")
+                                  {importUserName}@{dspaceHost}: \
+                                  {dashImportFile}")
                 continue
-            
+
             # Import to DASH
-            sub2handle = {} # this is source of truth, we keep mapfile as an on-disk record
+            sub2handle = {}  # we keep mapfile as an on-disk record
             with open(os.path.join(proquestOutDir, "mapfile"), 'w') as mapfile:
 
-                sub_id = aipFile.rstrip('.zip')			
-                result = ssh([DSPACE_COMMAND, 'packager', '-s', '-w',
-                            '-t', 'AIP',
-                            '-e', 'hl_dash_admin@harvard.edu',
-                            '-p', collection_handle,
-                            dashImportFile])
+                sub_id = aipFile.rstrip('.zip')
+                result = self.ssh([self.DSPACE_COMMAND, 'packager', '-s', '-w',
+                                   '-t', 'AIP',
+                                   '-e', 'hl_dash_admin@harvard.edu',
+                                   '-p', collection_handle,
+                                   dashImportFile])
                 if result.returncode == 0:
-                    # notifyJM.log('pass', f"Imported {aipDir}/{aipFile} to DSpace", verbose)
-                    self.logger.info(f"Imported {aipDir}/{aipFile} to DSpace")
-                    handle = get_handle(str(result.stdout, 'utf-8'))
+                    # notifyJM.log('pass', f"Imported
+                    # {aipDir}/{aipFile} to DSpace", verbose)
+                    self.logger.info(f"Imported {aipDir}/ \
+                                     {aipFile} to DSpace")
+                    handle = self.get_handle(str(result.stdout, 'utf-8'))
                     sub2handle[sub_id] = handle
                     self.logger.info(f'{sub_id} {handle}', file=mapfile)
                 else:
-                    message = f"DSpace import failed for {aipDir}/{aipFile}.\n"
-                    message += f"Command run was: {' '.join(result.args)}\n"
-                    message += f"Process return code was: {result.returncode}\n"
-                    message += f"Process output was:\n\n{str(result.stdout, 'utf-8')}\n"
-                    message += f"Process error was:\n\n{str(result.stderr, 'utf-8')}\n"
-                    notifyJM.log('fail', message, verbose)
+                    message = f"DSpace import failed \
+                        for {aipDir}/{aipFile}.\n"
+                    message += f"Command run was: \
+                        {' '.join(result.args)}\n"
+                    message += f"Process return code was: \
+                        {result.returncode}\n"
+                    message += f"Process output was:\
+                        \n\n{str(result.stdout, 'utf-8')}\n"
+                    message += f"Process error was:\
+                        \n\n{str(result.stderr, 'utf-8')}\n"
+                    # notifyJM.log('fail', message, verbose)
+                    self.logger.error(message)
                     continue
-                
-            handles = set(sub2handle.values())
+
+            # handles = set(sub2handle.values())
 
             # run citation-update curation task
-            result = ssh([DSPACE_COMMAND, 'curate', '-t', 'citation-update', '-i', collection_handle])
+            result = self.ssh([self.DSPACE_COMMAND, 'curate', '-t',
+                               'citation-update', '-i', collection_handle])
             if result.returncode == 0:
-                # notifyJM.log('pass', "Ran citation-update curation task", verbose)
+                # notifyJM.log('pass',
+                # "Ran citation-update curation task", verbose)
                 self.logger.info("Ran citation-update curation task")
             else:
                 message = "Couldn't run citation-update curation task"
                 message += f'Command run was: {" ".join(result.args)}'
                 message += f"Process return code was: {result.returncode}"
-                message += f"Process output was:\n\n{str(result.stdout, 'utf-8')}"
-                message += f"Process error was:\n\n{str(result.stderr, 'utf-8')}"
-                notifyJM.log('warn', message, verbose)
-            
+                message += f"Process output was:\
+                    \n\n{str(result.stdout, 'utf-8')}"
+                message += f"Process error was:\
+                    \n\n{str(result.stderr, 'utf-8')}"
+                # notifyJM.log('warn', message, verbose)
+                self.logger.warn(message)
+
             etds2AlmaOut.write(f'{schoolCode},{batch}\n')
 
-        etds2AlmaOut.close()		
+        etds2AlmaOut.close()
         # notifyJM.report('complete')
         self.logger.info('complete')
         return True
@@ -301,54 +325,60 @@ class Worker():
 
         xfer.close()
         return aipFiles
-    
+
     # A few fields need to be remapped in the xml
-    def rewrite_mets(aipDir, batch, schoolCode):
+    def rewrite_mets(self, aipDir, batch, schoolCode):
         global notifyJM
         underGrad = False
         masters = False
         addMasters = False
         sendToDash = True
-        
-        # Load mets file into an xml tree object	
+
+        # Load mets file into an xml tree object
         metsFile = f'{aipDir}/mets.xml'
         if os.path.isfile(metsFile):
             try:
                 treeMets = xmlTree.parse(metsFile)
                 rootMets = treeMets.getroot()
-            except:
-                notifyJM.log('fail', f'Failed to load xml from {metsFile}', verbose)
+            except Exception as e:
+                # notifyJM.log('fail', f'Failed to
+                # load xml from {metsFile}', verbose)
+                self.logger.error(f'Failed to load xml from {metsFile}: {e}')
                 return False
         else:
-            notifyJM.log('fail', f"{metsFile} not found", verbose)
-            notifyJM.report('stopped')
+            # notifyJM.log('fail', f"{metsFile} not found", verbose)
+            self.logger.error(f"{metsFile} not found")
+            # notifyJM.report('stopped')
+            self.logger.error("stppped")
             return False
-            
-        # Find and remapped fields	
-        for dimField in rootMets.iter(f'{dimNamespace}field'):
+
+        # Find and remapped fields
+        for dimField in rootMets.iter(f'{self.dimNamespace}field'):
             if dimField.attrib['mdschema'] == 'dc':
                 if dimField.attrib['element'] == 'date':
                     if dimField.attrib['qualifier'] == 'created':
                         dimField.attrib['mdschema'] = 'thesis'
                         dimField.attrib['element'] = 'degree'
                         dimField.attrib['qualifier'] = 'date'
-                    
+
                     elif dimField.attrib['qualifier'] == 'submitted':
                         dimField.attrib['qualifier'] = 'created'
-                
+
                 elif dimField.attrib['element'] == 'subject':
                     try:
                         if dimField.attrib['qualifier'] == 'PQ':
                             dimField.attrib.pop('qualifier')
-                    except:
+                    except Exception as e:
+                        self.logger.info(e)
                         continue
-                                    
-                elif dimField.attrib['element'] == 'dc': 
+
+                elif dimField.attrib['element'] == 'dc':
                     try:
                         if dimField.attrib['qualifier'] == 'subject':
                             dimField.attrib['element'] = 'subject'
                             dimField.attrib.pop('qualifier')
-                    except:
+                    except Exception as e:
+                        self.logger.info(e)
                         continue
 
             elif dimField.attrib['mdschema'] == 'thesis':
@@ -357,18 +387,20 @@ class Worker():
                         dimField.attrib['mdschema'] = 'dc'
                         dimField.attrib['element'] = 'date'
                         dimField.attrib['qualifier'] = 'submitted'
-                    
+
                     elif dimField.attrib['qualifier'] == 'name':
 
                         # College Undergraduate	and DCE Masters
-                        if dimField.text == 'A.B.' or dimField.text == 'S.B.' or dimField.text == 'A.L.M.':
-                            dimField.text = dimField.text.replace('.', '')						
+                        if (dimField.text == 'A.B.' or dimField.text == 'S.B.'
+                                or dimField.text == 'A.L.M.'):
+                            dimField.text = dimField.text.replace('.', '')
 
-                            # College Undergraduate	
+                            # College Undergraduate
                             if dimField.text == 'AB' or dimField.text == 'SB':
                                 underGrad = True
                                 parentNode = dimField.getparent()
-                                dimFieldAdd = xmlTree.SubElement(parentNode, f'{dimNamespace}field')
+                                dimFieldAdd = xmlTree.SubElement(
+                                    parentNode, f'{self.dimNamespace}field')
                                 dimFieldAdd.attrib['mdschema'] = "thesis"
                                 dimFieldAdd.attrib['element'] = "degree"
                                 dimFieldAdd.attrib['qualifier'] = "level"
@@ -393,91 +425,123 @@ class Worker():
                         # Doctoral
                         if dimField.text == 'Doctoral Dissertation':
                             dimField.text = 'Doctoral'
-                            
+
             # Check for an embargo. Replace 5 digit year dates.
             elif dimField.attrib['mdschema'] == 'dash':
                 if dimField.attrib['element'] == 'embargo':
-                    notifyJM.log('info', f"{aipDir}/mets.xml: Embargo information found", verbose)
-                    
+                    # notifyJM.log('info', f"{aipDir}/mets.xml: Embargo
+                    # information found", verbose)
+                    self.logger.info(f"{aipDir}/mets.xml: \
+                                     Embargo information found")
+
                     try:
-                        if dimField.attrib['qualifier'] == 'terms' or dimField.attrib['qualifier'] == 'until':
-                            match = re5digitDate.match(dimField.text)
+                        if (dimField.attrib['qualifier'] == 'terms' or
+                                dimField.attrib['qualifier'] == 'until'):
+                            match = self.re5digitDate.match(dimField.text)
                             if match:
-                            
+
                                 # These do not go to Dash
-                                if schoolCode == 'college' and dimField.attrib['qualifier'] == 'terms':
+                                if (schoolCode == 'college' and
+                                        dimField.attrib['qualifier'] ==
+                                        'terms'):
                                     if dimField.text == '10000-01-01':
-                                        notifyJM.log('warn', f"Batch {batch} will not be sent to Dash due to permanent Embargo information found", verbose)
+                                        # notifyJM.log('warn', f"Batch {batch}
+                                        # will not be sent to Dash due to
+                                        # permanentEmbargo information found",
+                                        # verbose)
                                         sendToDash = False
                                 else:
                                     dimField.text = f'9999{match.group(1)}'
-                    except:
+                    except Exception as e:
+                        self.logger.info(e)
                         continue
 
-        # Do another pass to remove any html tags and to set College Undergraduate and masters	
-        for dimField in rootMets.iter(f'{dimNamespace}field'):
-                            
+        # Do another pass to remove any html tags
+        # and to set College Undergraduate and masters
+        for dimField in rootMets.iter(f'{self.dimNamespace}field'):
+
             # Remove any html tags
             if dimField.text:
-                textNoHtml = re.sub('</*\w*>?', '', dimField.text)
+                textNoHtmlPattern = '</*\\w*>?'
+                textNoHtml = re.sub(textNoHtmlPattern, '', dimField.text)
                 dimField.text = textNoHtml
 
-            if dimField.attrib['mdschema'] == 'thesis':			
+            if dimField.attrib['mdschema'] == 'thesis':
                 if dimField.attrib['element'] == 'degree':
                     try:
                         if dimField.attrib['qualifier'] == 'grantor':
 
                             # Remove if found
-                            dimField.text = re.sub('\s*-\s*Pre\s*20\d\d', '', dimField.text)
+                            dimFieldPattern = '\\s*-\\s*Pre\\s*20\\d\\d'
+                            dimField.text = re.sub(dimFieldPattern, '',
+                                                   dimField.text)
 
                             if underGrad:
-                                if dimField.text == 'Harvard University Engineering and Applied Sciences':
+                                engText = 'Harvard University Engineering \
+                                    and Applied Sciences'
+                                if dimField.text == engText:
                                     dimField.text = 'Harvard College'
-                    
+
                             if masters:
-                                if ': Master of Liberal Arts in Ext. Studies (ALM)' in dimField.text:
-                                    dimField.text = dimField.text.replace(': Master of Liberal Arts in Ext. Studies (ALM)', '')
+                                almText = ': Master of Liberal Arts in \
+                                    Ext. Studies (ALM)'
+                                if almText in dimField.text:
+                                    dimField.text = (
+                                        dimField.text.replace(almText, '')
+                                    )
 
                             if addMasters:
                                 parentNode = dimField.getparent()
-                                dimFieldAdd = xmlTree.SubElement(parentNode, f'{dimNamespace}field')
+                                dimFieldAdd = xmlTree.\
+                                    SubElement(parentNode,
+                                               f'{self.dimNamespace}field')
                                 dimFieldAdd.attrib['mdschema'] = "thesis"
                                 dimFieldAdd.attrib['element'] = "degree"
                                 dimFieldAdd.attrib['qualifier'] = "level"
                                 dimFieldAdd.text = 'Masters'
 
-                    except:
+                    except Exception as e:
+                        self.logger.info(e)
                         continue
 
         # Replace any 5 digit year dates in right context
-        for rightsContext in rootMets.iter(f'{rightsNamespace}Context'):
+        for rightsContext in \
+                rootMets.iter(f'{self.call_apirightsNamespace}Context'):
             try:
-                match = re5digitDate.match(rightsContext.attrib['start-date'])
+                match = \
+                    self.re5digitDate.match(rightsContext.attrib['start-date'])
                 if match:
-                    rightsContext.attrib['start-date'] = f'9999{match.group(1)}'
-            except:
+                    rightsContext.attrib['start-date'] = \
+                        f'9999{match.group(1)}'
+            except Exception as e:
+                self.logger.info(e)
                 continue
-            
+
         # Write out updated mets file and move into place
         os.remove(metsFile)
-        treeMets.write(metsFile, encoding='utf-8', xml_declaration=True, pretty_print=True)
-        
+        treeMets.write(metsFile, encoding='utf-8',
+                       xml_declaration=True, pretty_print=True)
+
         return sendToDash
 
     def sh(*args, **kwargs):
         kwargs['stdout'] = kwargs['stderr'] = PIPE
         return run(*args, **kwargs)
 
-    def ssh(command, *arguments, **kwargs):
+    def ssh(self, command, *arguments, **kwargs):
 
-        if importUserName != 'dspace':
+        if self.importUserName != 'dspace':
             command = ["sudo", "-u", "dspace", *command]
-        return sh(['ssh', f'{importUserName}@{dspaceHost}', " ".join(map(quote, command))], *arguments, **kwargs)
+        return self.sh(['ssh', f'{self.importUserName}@{self.dspaceHost}',
+                        " ".join(map(quote, command))], *arguments, **kwargs)
 
-    def get_handle(output):
+    def get_handle(self, output):
         for line in output.split("\n"):
             if line.startswith('CREATED'):
                 match = re.search(r'hdl=(\d+/\d+)', line)
-                if match: return match.group(1)
-                else: notifyJM.log('warn', f"No handle in output: {output}", verbose)
-
+                if match:
+                    return match.group(1)
+                else:
+                    # notifyJM.log('warn', f"No handle in output:
+                    # {output}", verbose)
+                    self.logger.warn(f"No handle in output: {output}")
