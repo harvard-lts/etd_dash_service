@@ -2,6 +2,7 @@ from etd.worker import Worker
 import requests
 import unittest
 
+
 class MockResponse:
     text = "REST api is running."
 
