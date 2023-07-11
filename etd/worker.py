@@ -9,6 +9,7 @@ from datetime import datetime
 from subprocess import run, PIPE
 # from glob import glob
 from shlex import quote
+from .xfer_files import xfer_files
 
 """
 This is a basic worker class.
@@ -203,7 +204,6 @@ class Worker():
         return r.text
 
     def get_files(self):
-        from xfer_files import xfer_files
         # global notifyJM
         dropboxServer = os.getenv("dropboxServer")
         dropboxUser = os.getenv("dropboxUser")
