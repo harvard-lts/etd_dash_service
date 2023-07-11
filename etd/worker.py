@@ -207,8 +207,8 @@ class Worker():
         # global notifyJM
         dropboxServer = os.getenv("dropboxServer")
         dropboxUser = os.getenv("dropboxUser")
-        homeDir = os.getenv("homeDir")
-        privateKey = f'{homeDir}/.ssh/kant_id_rsa'
+        # homeDir = os.getenv("homeDir")
+        privateKey = os.getenv("PRIVATE_KEY_PATH")
         now = datetime.now()
         datestamp = now.strftime('%Y%m%d%H')
         dataDir = 'data'

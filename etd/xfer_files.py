@@ -19,6 +19,8 @@ class xfer_files(Connection):
         self.privateKey = privateKey
         self.password = password
         self.sshPort = sshPort
+        self._sftp_live = False
+        self._transport = None
         self.error = False
 
         # Connect to remote site
@@ -27,9 +29,11 @@ class xfer_files(Connection):
                 super().__init__(remoteSite, username=remoteUser,
                                  private_key=privateKey, port=sshPort)
                 self.error = False
-            except Exception:
-                self.error = 'Login failed: %s@%s' % \
+            except Exception as e:
+                self.error = 'Key login failed: %s@%s' % \
                     (self.remoteUser, self.remoteSite)
+                print("CANT LOGIN ----")
+                print(e)
                 return None
         elif self.password:
             try:
@@ -37,7 +41,7 @@ class xfer_files(Connection):
                                  password=password, port=sshPort)
                 self.error = False
             except Exception:
-                self.error = 'Login failed: %s@%s' % \
+                self.error = 'PW login failed: %s@%s' % \
                     (self.remoteUser, self.remoteSite)
                 return None
         else:
