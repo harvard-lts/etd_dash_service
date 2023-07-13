@@ -2,7 +2,7 @@ FROM python:3.11-slim-buster
 
 COPY requirements.txt /tmp/
 
-RUN apt-get update && apt-get install -y libpq-dev gcc python-dev supervisor nginx openssl curl && \
+RUN apt-get update && apt-get install -y libpq-dev gcc python-dev supervisor nginx openssl openssh-server curl && \
   mkdir -p /etc/nginx/ssl/ && \
   openssl req \
             -x509 \

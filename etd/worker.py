@@ -11,6 +11,7 @@ import zipfile
 # from glob import glob
 from shlex import quote
 from .xfer_files import xfer_files
+# import paramiko
 
 """
 This is a basic worker class.
@@ -139,8 +140,9 @@ class Worker():
             instance_data = self.getInstanceData()
             collection_handle = instance_data[schoolCode]['handle']
             dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
-            proc = self.sh(['scp', '-r', aipFile, f'{self.importUserName} \
-                            @{self.dspaceHost}:{dashImportFile}'])
+
+            dest = f'{self.importUserName}@{self.dspaceHost}:{dashImportFile}'
+            proc = self.sh(['scp', '-r', aipFile, dest])
             if proc.returncode == 0:
                 # notifyJM.log('pass', f"Copied AIP package to
                 # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
@@ -150,8 +152,8 @@ class Worker():
             else:
                 # notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
                 # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
-                self.logger.error("Failed to send {aipDir}/{aipFile} to \
-                                  {importUserName}@{dspaceHost}: \
+                self.logger.error(f"Failed to send {aipDir}/{aipFile} to \
+                                  {self.importUserName}@{self.dspaceHost}: \
                                   {dashImportFile}")
                 continue
 
