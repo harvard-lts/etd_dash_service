@@ -1,6 +1,16 @@
 import requests
 import logging
 import os
+from opentelemetry import trace
+from opentelemetry.trace import Status
+from opentelemetry.trace import StatusCode
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+        OTLPSpanExporter)
+from opentelemetry.sdk.resources import SERVICE_NAME
+
 
 import lxml.etree as xmlTree
 # import os, re, sys, shutil, xml.sax
@@ -19,6 +29,19 @@ This is a basic worker class.
 Since: 2023-05-23
 Author: cgoines
 """
+
+# tracing setup
+JAEGER_NAME = os.getenv('JAEGER_NAME')
+JAEGER_SERVICE_NAME = os.getenv('JAEGER_SERVICE_NAME')
+
+resource = Resource(attributes={SERVICE_NAME: JAEGER_SERVICE_NAME})
+trace.set_tracer_provider(TracerProvider(resource=resource))
+tracer = trace.get_tracer(__name__)
+
+otlp_exporter = OTLPSpanExporter(endpoint=JAEGER_NAME, insecure=True)
+
+span_processor = BatchSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
 
 class Worker():
@@ -45,6 +68,7 @@ class Worker():
     def get_version(self):
         return self.version
 
+    @tracer.start_as_current_span("send_to_dash_worker")
     def send_to_dash(self, message):
         # global dspace_instance, notifyJM
         # now = datetime.now()
@@ -63,6 +87,9 @@ class Worker():
         csvEtds2Alma = os.path.join(filesDir, 'etds2alma.csv')
         etds2AlmaOut = open(csvEtds2Alma, 'a+')
 
+        current_span = trace.get_current_span()
+        current_span.add_event("sending to dash")
+
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
             # notifyJM.log('info', f'Processing {aipFile}', verbose)
@@ -80,6 +107,7 @@ class Worker():
                 # notifyJM.log('fail', f'File name {aipFile}
                 # is not supported', verbose)
                 self.logger.error(f'File name {aipFile} is not supported')
+                current_span.add_event(f'File name {aipFile} is not supported')
                 continue
 
             # Unpack AIP package
@@ -119,6 +147,10 @@ class Worker():
                 self.logger.error(e)
                 self.logger.error(f"The zip command \
                                   failed in {aipDir}")
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event(f"The zip command \
+                                  failed in {aipDir}")
+                current_span.record_exception(e)
             # if proc.returncode > 0:
                 # notifyJM.log('fail', f"The command {zipWithArgs}
                 # failed in {aipDir}", verbose)
@@ -135,6 +167,10 @@ class Worker():
                     # create {proquestOutDir}', verbose)
                     self.logger.error(f'Failed to create \
                                       {proquestOutDir}: {e}')
+                    current_span.set_status(Status(StatusCode.ERROR))
+                    current_span.add_event(f'Failed to create \
+                                      {proquestOutDir}: {e}')
+                    current_span.record_exception(e)
                     continue
 
             instance_data = self.getInstanceData()
@@ -149,10 +185,16 @@ class Worker():
                 self.logger.info(f"Copied AIP package to \
                                  {self.importUserName} \
                                  @{self.dspaceHost}:{dashImportFile}")
+                current_span.add_event(f"Copied AIP package to \
+                                 {self.importUserName} \
+                                 @{self.dspaceHost}:{dashImportFile}")
             else:
                 # notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
                 # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
                 self.logger.error(f"Failed to send {aipDir}/{aipFile} to \
+                                  {self.importUserName}@{self.dspaceHost}: \
+                                  {dashImportFile}")
+                current_span.add_event(f"Failed to send {aipDir}/{aipFile} to \
                                   {self.importUserName}@{self.dspaceHost}: \
                                   {dashImportFile}")
                 continue
@@ -188,6 +230,7 @@ class Worker():
                         \n\n{str(result.stderr, 'utf-8')}\n"
                     # notifyJM.log('fail', message, verbose)
                     self.logger.error(message)
+                    current_span.add_event(message)
                     continue
 
             # handles = set(sub2handle.values())
@@ -209,21 +252,27 @@ class Worker():
                     \n\n{str(result.stderr, 'utf-8')}"
                 # notifyJM.log('warn', message, verbose)
                 self.logger.warn(message)
+                current_span.add_event(message)
 
             etds2AlmaOut.write(f'{schoolCode},{batch}\n')
 
         etds2AlmaOut.close()
         # notifyJM.report('complete')
         self.logger.info('complete')
+        current_span.add_event("completed")
         return True
 
     # this is call to the DASH healthcheck for integration testing
+    @tracer.start_as_current_span("call_api")
     def call_api(self):
         url = "https://dash.harvard.edu/rest/test"
         r = requests.get(url)
         self.logger.debug("In call api")
+        current_span = trace.get_current_span()
+        current_span.add_event("in call api")
         return r.text
 
+    @tracer.start_as_current_span("get_files")
     def get_files(self):
         # global notifyJM
         dropboxServer = os.getenv("dropboxServer")
@@ -235,6 +284,9 @@ class Worker():
         dataDir = 'data'
         dataInDir = os.path.join(dataDir, "in")
         aipFiles = []
+
+        current_span = trace.get_current_span()
+        current_span.add_event("get files started")
 
         # Connect to our Proquest dropbox
         try:
@@ -252,6 +304,10 @@ class Worker():
             # {dropboxUser}@{dropboxServer}', verbose)
             self.logger.error(f'Fail to connect to \
                               {dropboxUser}@{dropboxServer}: {e}')
+            current_span.set_status(Status(StatusCode.ERROR))
+            current_span.add_event(f'Fail to connect to \
+                              {dropboxUser}@{dropboxServer}: {e}')
+            current_span.record_exception(e)
 
         # Get a list of incoming school directories
         schoolDirs = xfer.listdir('incoming')
@@ -261,6 +317,7 @@ class Worker():
             self.logger.error(xfer.error)
             # notifyJM.report('stopped')
             self.logger.error('stopped')
+            current_span.add_event('stopped')
             return False
 
         # Loop on directory list looking for incoming AIP files
@@ -276,12 +333,15 @@ class Worker():
                 if xfer.error:
                     # notifyJM.log('fail', xfer.error, verbose)
                     self.logger.error(xfer.error)
+                    current_span.add_event(xfer.error)
                     continue
 
                 # Loop on any files found in school incoming directories
                 for schoolFile in schoolFiles:
                     self.logger.info("schoolFile")
                     self.logger.info(schoolFile)
+                    current_span.add_event("schoolFile")
+                    current_span.add_event(schoolFile)
                     # Get the subm ID to use for local AIP dir names
                     match = self.reAipPackage.match(schoolFile)
                     if match:
@@ -290,6 +350,8 @@ class Worker():
                         # notifyJM.log('fail', f'File name {schoolFile}
                         #  is not supported', verbose)
                         self.logger.error(f'File name {schoolFile} \
+                                          is not supported')
+                        current_span.add_event('File name {schoolFile} \
                                           is not supported')
                         continue
 
@@ -307,6 +369,9 @@ class Worker():
                                               {proquestInDir}: {e}')
                             # notifyJM.report('stopped')
                             self.logger.error('stopped')
+                            current_span.add_event(f'Failed to create \
+                                              {proquestInDir}: {e}')
+                            current_span.add_event('stopped')
                             return False
 
                     # Get file and then move it to it's archive
@@ -316,6 +381,7 @@ class Worker():
                         if xfer.error:
                             # notifyJM.log('fail', xfer.error, verbose)
                             self.logger.error(xfer.error)
+                            current_span.add_event(xfer.error)
                             continue
                     except Exception as e:
                         # notifyJM.log('fail', f'Fail to sftp {dropboxServer}:
@@ -323,6 +389,12 @@ class Worker():
                         self.logger.error(f'Fail to sftp {dropboxServer}: \
                                           incoming/{schoolCode}/{schoolFile}: \
                                             {e}')
+                        current_span.set_status(Status(StatusCode.ERROR))
+                        current_span.add_event(f'Fail to sftp \
+                                          {dropboxServer}: \
+                                          incoming/{schoolCode}/{schoolFile}: \
+                                            {e}')
+                        current_span.record_exception(e)
                         continue
 
                     try:
@@ -338,6 +410,12 @@ class Worker():
                         self.logger.error(f'Fail to archive {dropboxServer}: \
                                           incoming/{schoolCode}/{schoolFile}: \
                                           {e}')
+                        current_span.set_status(Status(StatusCode.ERROR))
+                        current_span.add_event(f'Fail to archive \
+                                          {dropboxServer}: \
+                                          incoming/{schoolCode}/{schoolFile}: \
+                                          {e}')
+                        current_span.record_exception(e)
                         continue
 
                     # notifyJM.log('pass', f'Received {schoolCode}:
@@ -346,15 +424,20 @@ class Worker():
                                      f'{proquestInDir}/{schoolFile}'])
 
         xfer.close()
+        current_span.add_event("get files completed")
         return aipFiles
 
     # A few fields need to be remapped in the xml
+    @tracer.start_as_current_span("rewrite_mets")
     def rewrite_mets(self, aipDir, batch, schoolCode):
         global notifyJM
         underGrad = False
         masters = False
         addMasters = False
         sendToDash = True
+
+        current_span = trace.get_current_span()
+        current_span.add_event("rewrite mets started")
 
         # Load mets file into an xml tree object
         metsFile = f'{aipDir}/mets.xml'
@@ -372,6 +455,7 @@ class Worker():
             self.logger.error(f"{metsFile} not found")
             # notifyJM.report('stopped')
             self.logger.error("stppped")
+            current_span.add_event("stopped")
             return False
 
         # Find and remapped fields
@@ -392,6 +476,7 @@ class Worker():
                             dimField.attrib.pop('qualifier')
                     except Exception as e:
                         self.logger.info(e)
+                        current_span.record_exception(e)
                         continue
 
                 elif dimField.attrib['element'] == 'dc':
@@ -401,6 +486,7 @@ class Worker():
                             dimField.attrib.pop('qualifier')
                     except Exception as e:
                         self.logger.info(e)
+                        current_span.record_exception(e)
                         continue
 
             elif dimField.attrib['mdschema'] == 'thesis':
@@ -455,6 +541,8 @@ class Worker():
                     # information found", verbose)
                     self.logger.info(f"{aipDir}/mets.xml: \
                                      Embargo information found")
+                    current_span.add_event(f"{aipDir}/mets.xml: \
+                                     Embargo information found")
 
                     try:
                         if (dimField.attrib['qualifier'] == 'terms' or
@@ -476,6 +564,7 @@ class Worker():
                                     dimField.text = f'9999{match.group(1)}'
                     except Exception as e:
                         self.logger.info(e)
+                        current_span.record_exception(e)
                         continue
 
         # Do another pass to remove any html tags
@@ -524,6 +613,7 @@ class Worker():
 
                     except Exception as e:
                         self.logger.info(e)
+                        current_span.record_exception(e)
                         continue
 
         # Replace any 5 digit year dates in right context
@@ -537,6 +627,7 @@ class Worker():
                         f'9999{match.group(1)}'
             except Exception as e:
                 self.logger.info(e)
+                current_span.record_exception(e)
                 continue
 
         # Write out updated mets file and move into place
@@ -544,13 +635,17 @@ class Worker():
         treeMets.write(metsFile, encoding='utf-8',
                        xml_declaration=True, pretty_print=True)
 
+        current_span.add_event("rewrite mets completed")
         return sendToDash
 
     def sh(self, *args, **kwargs):
         kwargs['stdout'] = kwargs['stderr'] = PIPE
         return run(*args, **kwargs)
 
+    @tracer.start_as_current_span("ssh")
     def ssh(self, command, *arguments, **kwargs):
+        current_span = trace.get_current_span()
+        current_span.add_event("connecting via ssh")
 
         if self.importUserName != 'dspace':
             command = ["sudo", "-u", "dspace", *command]
