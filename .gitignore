@@ -128,7 +128,9 @@ ENV/
 env.bak/
 venv.bak/
 
-.ssh
+#rsa keys
+*_rsa
+known_hosts
 
 # Spyder project settings
 .spyderproject
