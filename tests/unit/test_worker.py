@@ -115,4 +115,4 @@ class TestWorkerClass():
                          namespaces=namespace_mapping)[0].\
             text == "Masters"
 
-        # os.remove(metsFile)
+        os.remove(metsFile)
