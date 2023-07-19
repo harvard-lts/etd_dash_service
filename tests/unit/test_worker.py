@@ -77,17 +77,42 @@ class TestWorkerClass():
         assert resp == expected_resp'''
 
     def test_rewrite_mets(self):
+        schoolCode = "gsd"
+        worker = Worker()
         namespace_mapping = {"dim": "http://www.dspace.org/xmlns/dspace/dim"}
         aipDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
         batch = "proquest2023071720-993578-gsd"
         metsBeforeFile = os.path.join(aipDir, "mets_before.xml")
         shutil.copy(metsBeforeFile, os.path.join(aipDir, "mets.xml"))
         metsFile = os.path.join(aipDir, "mets.xml")
-        schoolCode = "gsd"
-        worker = Worker()
         worker.rewrite_mets(aipDir, batch, schoolCode)
         # doc_before = ET.parse(os.path.join(aipDir, "mets.xml"))
-        # doc = ET.parse(metsFile)
-        # assert doc.xpath("//dim:field[@qualifier='created' and text()='2023-05']", namespaces=namespace_mapping)[0].get('element') == "date"
+        doc = ET.parse(metsFile)
 
-        os.remove(metsFile)
+        # this checks all differences between original and rewritten mets
+        assert doc.xpath("//dim:field[text()='Design']",
+                         namespaces=namespace_mapping)[0].\
+            get('qualifier') is None
+
+        assert doc.xpath("//dim:field[text()='2023' and @mdschema='dc']",
+                         namespaces=namespace_mapping)[0].\
+            get('element') == "date"
+        assert doc.xpath("//dim:field[text()='2023' and @mdschema='dc']",
+                         namespaces=namespace_mapping)[0]\
+            .get('qualifier') == "created"
+
+        assert doc.xpath("//dim:field[text()='2023-05']",
+                         namespaces=namespace_mapping)[0].\
+            get('element') == "date"
+        assert doc.xpath("//dim:field[text()='2023-05']",
+                         namespaces=namespace_mapping)[0].\
+            get('mdschema') == "dc"
+        assert doc.xpath("//dim:field[text()='2023-05']",
+                         namespaces=namespace_mapping)[0].\
+            get('qualifier') == "submitted"
+
+        assert doc.xpath("//dim:field[@qualifier='level']",
+                         namespaces=namespace_mapping)[0].\
+            text == "Masters"
+
+        # os.remove(metsFile)
