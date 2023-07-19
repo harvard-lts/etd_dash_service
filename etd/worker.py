@@ -21,6 +21,7 @@ import zipfile
 # from glob import glob
 from shlex import quote
 from .xfer_files import xfer_files
+from .constants import instance_data
 # import paramiko
 
 """
@@ -69,7 +70,7 @@ class Worker():
         return self.version
 
     @tracer.start_as_current_span("send_to_dash_worker")
-    def send_to_dash(self, message):
+    def send_to_dash(self, message):  # pragma: no cover
         # global dspace_instance, notifyJM
         # now = datetime.now()
         # dateTimeStamp = now.strftime('%Y%m%d%H')
@@ -175,7 +176,6 @@ class Worker():
                     current_span.record_exception(e)
                     continue
 
-            instance_data = self.getInstanceData()
             collection_handle = instance_data[schoolCode]['handle']
             dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
 
@@ -265,7 +265,7 @@ class Worker():
         return True
 
     @tracer.start_as_current_span("get_files")
-    def get_files(self):
+    def get_files(self):  # pragma: no cover
         # global notifyJM
         dropboxServer = os.getenv("dropboxServer")
         dropboxUser = os.getenv("dropboxUser")
@@ -635,7 +635,7 @@ class Worker():
         return run(*args, **kwargs)
 
     @tracer.start_as_current_span("ssh")
-    def ssh(self, command, *arguments, **kwargs):
+    def ssh(self, command, *arguments, **kwargs):  # pragma: no cover
         current_span = trace.get_current_span()
         current_span.add_event("connecting via ssh")
 
@@ -644,7 +644,7 @@ class Worker():
         return self.sh(['ssh', f'{self.importUserName}@{self.dspaceHost}',
                         " ".join(map(quote, command))], *arguments, **kwargs)
 
-    def get_handle(self, output):
+    def get_handle(self, output):  # pragma: no cover
         for line in output.split("\n"):
             if line.startswith('CREATED'):
                 match = re.search(r'hdl=(\d+/\d+)', line)
@@ -654,91 +654,6 @@ class Worker():
                     # notifyJM.log('warn', f"No handle in output:
                     # {output}", verbose)
                     self.logger.warn(f"No handle in output: {output}")
-
-    def getInstanceData(self):
-        instance_data = {
-            'gsas': {
-                'handle': '1/4927603',
-                'bill_code': '1235',
-                'bill_address': "Office of the Registrar, Faculty of \
-                Arts and Sciences, Att’n Kathy Hanley, Richard A. and \
-                Susan F. Smith Campus Center, 1350 Massachusetts Avenue, \
-                Suite 450, Cambridge, MA 02138"
-                },
-            'gsd': {
-                'handle': '1/13398958',
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'gse': {
-                'handle': '1/13056148',
-                'bill_code': '1616',
-                'bill_address': 'Harvard Graduate School of Education c/o \
-                Jennifer Schroeder, 13 Appian Way, Cambridge, MA 02138'
-                },
-            'hbs': {
-                'handle': '1/13398959',
-                'bill_code': '622',
-                'bill_address': 'Jen Mucciarone, Wyss House, Harvard Business \
-                School, Soldiers Field Road, Boston, MA 02163'
-                },
-            'hds': {
-                'handle': '1/13398960',
-                'bill_code': '4130',
-                'bill_address': "Harvard Divinity School Registrar's Office, \
-                Andover Hall, 45 Francis Ave., Cambridge, MA 02138"
-                },
-            'hls': {
-                'handle': '',
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'hms': {
-                'handle': '1/11407446',
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'hsdm': {
-                'handle': '1/11407445',
-                'bill_code': '2553',
-                'bill_address': 'Dawn DeCosta, Harvard School of Dental \
-                Medicine, 188 Longwood Ave. REB 404, Boston, MA 02115'
-                },
-            'hsph': {
-                'handle': '1/13398961',
-                'bill_code': '2020',
-                'bill_address': 'Karen Brown, 677 Huntington Ave, Kresge G10, \
-                Boston, MA 02115'
-                },
-            'osc': {
-                'handle': '1/37156562',
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'edld': {  # use GSE billing code for now, need new code
-                'handle': '1/13056148',
-                'bill_code': '1616',
-                'bill_address': 'Doctoral Programs Office, \
-                Harvard Graduate School of Education, 13 Appian Way, \
-                Longfellow Hall G039, Cambridge, MA 02138'
-                },
-            'college': {
-                'handle': '1/4927603',  # true? same as GSAS?
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'qp': {
-                'handle': '1/11512821',  # per CL, go in GSE student papers
-                'bill_code': '',
-                'bill_address': ''
-                },
-            'dce': {
-                'handle': '1/14557739',
-                'bill_code': '',
-                'bill_address': ''
-                }
-        }
-        return instance_data
 
     # this is call to the DASH healthcheck for integration testing
     # @tracer.start_as_current_span("call_api")

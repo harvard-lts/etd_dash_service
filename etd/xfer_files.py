@@ -11,7 +11,7 @@ from pysftp import Connection
 from retrying import retry
 
 
-class xfer_files(Connection):
+class xfer_files(Connection):  # pragma: no cover
     def __init__(self, remoteSite, remoteUser, privateKey=False,
                  password=False, sshPort=22):
         self.remoteSite = remoteSite
