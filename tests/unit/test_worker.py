@@ -1,6 +1,8 @@
 from etd.worker import Worker
 import requests
-import shutil
+# import shutil
+import lxml.etree as ET
+import os
 # import unittest
 
 
@@ -75,8 +77,12 @@ class TestWorkerClass():
         assert resp == expected_resp'''
 
     def test_rewrite_mets(self):
+        namespace_mapping = {"dim": "http://www.dspace.org/xmlns/dspace/dim"}
         aipDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
         batch = "proquest2023071720-993578-gsd"
         schoolCode = "gsd"
         worker = Worker()
         worker.rewrite_mets(aipDir, batch, schoolCode)
+        doc_before = ET.parse(os.path.join(aipDir, "mets.xml"))
+        doc = ET.parse(os.path.join(aipDir, "mets.xml"))
+        assert doc.xpath("//dim:field[@qualifier='created' and text()='2023-05']", namespaces=namespace_mapping)[0].get('element') == "date"
