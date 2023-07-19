@@ -90,6 +90,8 @@ class Worker():
         current_span = trace.get_current_span()
         current_span.add_event("sending to dash")
 
+        print(filesDir)
+
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
             # notifyJM.log('info', f'Processing {aipFile}', verbose)
@@ -261,16 +263,6 @@ class Worker():
         self.logger.info('complete')
         current_span.add_event("completed")
         return True
-
-    # this is call to the DASH healthcheck for integration testing
-    @tracer.start_as_current_span("call_api")
-    def call_api(self):
-        url = "https://dash.harvard.edu/rest/test"
-        r = requests.get(url)
-        self.logger.debug("In call api")
-        current_span = trace.get_current_span()
-        current_span.add_event("in call api")
-        return r.text
 
     @tracer.start_as_current_span("get_files")
     def get_files(self):
@@ -747,3 +739,16 @@ class Worker():
                 }
         }
         return instance_data
+
+    # this is call to the DASH healthcheck for integration testing
+    # @tracer.start_as_current_span("call_api")
+    def call_api(self):
+        # url = "https://dash.harvard.edu/rest/test"
+        url = os.getenv("DASH_TESTING_URL")
+        # need verify false b/c using selfsigned certs
+        r = requests.get(url, verify=False)
+        self.logger.debug("In call api")
+        self.logger.debug(r.text)
+        # current_span = trace.get_current_span()
+        # current_span.add_event("in call api")
+        return r.text

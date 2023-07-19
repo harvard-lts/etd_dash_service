@@ -1,6 +1,7 @@
 from etd.worker import Worker
 import requests
-import unittest
+import shutil
+# import unittest
 
 
 class MockResponse:
@@ -10,12 +11,13 @@ class MockResponse:
 class TestWorkerClass():
 
     def test_version(self):
-        expected_version = "0.0.1"
         worker = Worker()
+        expected_version = "0.0.1"
         version = worker.get_version()
         assert version == expected_version
 
     def test_api(self, monkeypatch):
+        worker = Worker()
 
         def mock_get(*args, **kwargs):
             return MockResponse()
@@ -23,25 +25,58 @@ class TestWorkerClass():
         # apply the monkeypatch for requests.get to mock_get
         monkeypatch.setattr(requests, "get", mock_get)
         expected_msg = "REST api is running."
-        worker = Worker()
         msg = worker.call_api()
         assert msg == expected_msg
 
     def test_api_fail(self, monkeypatch):
+        worker = Worker()
 
         def mock_get(*args, **kwargs):
             return MockResponse()
 
         # apply the monkeypatch for requests.get to mock_get
         monkeypatch.setattr(requests, "get", mock_get)
-        expected_msg = "REST api is NOT running."
-        worker = Worker()
+        expected_msg = "REST api is NOT runningx."
         msg = worker.call_api()
         assert msg != expected_msg
 
-    @unittest.skip("Need to get sftp key in place")
-    def test_send_to_dash(self):
-        expected_resp = "success"
+    ''' # @unittest.skip("Need to get sftp key in place")
+    def test_send_to_dash(self, monkeypatch):
         worker = Worker()
+        schoolFile = "submission_993578.zip"
+        submission_incoming_path = "/home/etdadm/tests/data/incoming/gsd"
+        in_path = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
+
+        # def mock_aipFiles(self):
+        #    aipFiles = []
+        #    aipFiles.append(["gsd", "proquest2023071720-993578-gsd",
+        #                    f'{in_path}/{schoolFile}'])
+        #    return aipFiles
+
+        # monkeypatch.setattr(worker, "send_to_dash", mock_aipFiles)
+
+        def mock_get_files(self):
+            shutil.copy(submission_incoming_path + "/" +
+                        schoolFile, in_path)
+            aipFiles = []
+            aipFiles.append(["gsd", "proquest2023071720-993578-gsd",
+                            f'{in_path}/{schoolFile}'])
+            return aipFiles
+
+        monkeypatch.setattr(worker, "send_to_dash", mock_get_files)
+
+        def mock_filesDir(self):
+            return '/home/etdadm/tests/files'
+
+        monkeypatch.setattr(worker, "send_to_dash", mock_filesDir)
+
+        expected_resp = True
         resp = worker.send_to_dash({"hello": "world"})
-        assert resp == expected_resp
+        assert resp == expected_resp'''
+
+    def test_rewrite_mets(self):
+        aipDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
+        batch = "proquest2023071720-993578-gsd"
+        schoolCode = "gsd"
+        worker = Worker()
+        worker.rewrite_mets(aipDir, batch, schoolCode)
