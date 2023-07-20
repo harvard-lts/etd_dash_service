@@ -80,7 +80,7 @@ class TestWorkerClass():
         schoolCode = "gsd"
         worker = Worker()
         namespace_mapping = {"dim": "http://www.dspace.org/xmlns/dspace/dim"}
-        aipDir = "/home/etdadm/tests/data/in/proquest2023071720-993578-gsd"
+        aipDir = "./tests/data/in/proquest2023071720-993578-gsd"
         batch = "proquest2023071720-993578-gsd"
         metsBeforeFile = os.path.join(aipDir, "mets_before.xml")
         shutil.copy(metsBeforeFile, os.path.join(aipDir, "mets.xml"))
@@ -115,7 +115,7 @@ class TestWorkerClass():
                          namespaces=namespace_mapping)[0].\
             text == "Masters"
 
-        # test the exceptions with an empty mets.xml
+        # test the exceptions with a bad mets.xml
         '''metsEmptyFile = os.path.join(aipDir, "mets_bad.xml")
         shutil.copy(metsEmptyFile, os.path.join(aipDir, "mets.xml"))
         metsFile = os.path.join(aipDir, "mets.xml")
