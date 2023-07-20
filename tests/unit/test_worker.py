@@ -42,7 +42,7 @@ class TestWorkerClass():
         msg = worker.call_api()
         assert msg != expected_msg
 
-    ''' # @unittest.skip("Need to get sftp key in place")
+    ''' # consider an integration test instead
     def test_send_to_dash(self, monkeypatch):
         worker = Worker()
         schoolFile = "submission_993578.zip"
