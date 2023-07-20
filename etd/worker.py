@@ -629,7 +629,7 @@ class Worker():
         current_span.add_event("rewrite mets completed")
         return sendToDash
 
-    def sh(self, *args, **kwargs):
+    def sh(self, *args, **kwargs):  # pragma: no cover
         kwargs['stdout'] = kwargs['stderr'] = PIPE
         return run(*args, **kwargs)
 
