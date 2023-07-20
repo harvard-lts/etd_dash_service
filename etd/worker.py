@@ -655,7 +655,7 @@ class Worker():
                     self.logger.warn(f"No handle in output: {output}")
 
     # this is call to the DASH healthcheck for integration testing
-    # @tracer.start_as_current_span("call_api")
+    @tracer.start_as_current_span("call_api")
     def call_api(self):
         # url = "https://dash.harvard.edu/rest/test"
         url = os.getenv("DASH_TESTING_URL")
