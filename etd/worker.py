@@ -22,7 +22,6 @@ import zipfile
 from shlex import quote
 from .xfer_files import xfer_files
 from .constants import instance_data
-# import paramiko
 
 """
 This is a basic worker class.
