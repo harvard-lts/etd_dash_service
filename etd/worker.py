@@ -43,6 +43,9 @@ otlp_exporter = OTLPSpanExporter(endpoint=JAEGER_NAME, insecure=True)
 span_processor = BatchSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
+# any "pragma: no cover" comments should be reviewed 2023--7-20
+# see jira: https://jira.huit.harvard.edu/browse/ETD-205
+
 
 class Worker():
     version = None
@@ -89,8 +92,6 @@ class Worker():
 
         current_span = trace.get_current_span()
         current_span.add_event("sending to dash")
-
-        print(filesDir)
 
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
