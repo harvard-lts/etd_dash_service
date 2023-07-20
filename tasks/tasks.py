@@ -43,8 +43,8 @@ def send_to_dash(json_message):
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             new_message[FEATURE_FLAGS] = feature_flags
-            if DASH_FEATURE_FLAG in feature_flags and \
-                    feature_flags[DASH_FEATURE_FLAG] == "on":
+            if (DASH_FEATURE_FLAG in feature_flags and
+                    feature_flags[DASH_FEATURE_FLAG] == "on"):
                 # Send to DASH
                 logger.debug("FEATURE IS ON>>>>>SEND TO DASH")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DASH")

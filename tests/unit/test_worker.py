@@ -115,4 +115,20 @@ class TestWorkerClass():
                          namespaces=namespace_mapping)[0].\
             text == "Masters"
 
+        # test the exceptions with an empty mets.xml
+        '''metsEmptyFile = os.path.join(aipDir, "mets_bad.xml")
+        shutil.copy(metsEmptyFile, os.path.join(aipDir, "mets.xml"))
+        metsFile = os.path.join(aipDir, "mets.xml")
+        try:
+            worker.rewrite_mets(aipDir, batch, schoolCode)
+            treeMets = doc.parse(metsFile)
+            rootMets = treeMets.getroot()
+        except Exception as e:
+            assert "Start tag expected" in str(e)
+
         os.remove(metsFile)
+        try:
+            resp = worker.rewrite_mets(aipDir, batch, schoolCode)
+            assert resp == False
+        except Exception as e:
+            assert e is None'''
