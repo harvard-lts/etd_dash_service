@@ -11,6 +11,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
         OTLPSpanExporter)
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.trace.propagation.tracecontext \
+    import TraceContextTextMapPropagator
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -40,9 +42,13 @@ def send_to_dash(json_message):
         logger.info("message")
         logger.info(json_message)
         new_message = {"hello": "from etd-dash-service"}
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier)
+        traceparent = carrier["traceparent"]
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             new_message[FEATURE_FLAGS] = feature_flags
+            new_message["traceparent"] = traceparent
             if (DASH_FEATURE_FLAG in feature_flags and
                     feature_flags[DASH_FEATURE_FLAG] == "on"):
                 # Send to DASH
