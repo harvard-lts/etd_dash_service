@@ -95,4 +95,6 @@ NOTE: you should see a pipeline with your new tag.  (if not, click on the "scan 
 - Set the Payload to the following JSON content
 `{"id": "da28b429-e006-49a5-ae77-da41b925bd85","task": "etd-dash-service.tasks.send_to_dash","args": [{"hello":"world"}]}`
 
+### Using OpenTelemetry for tracing
+This app uses OpenTelemetry (https://opentelemetry.io/) for live tracing. To see how it is implemented in the application, refer to this wiki: https://wiki.harvard.edu/confluence/display/LibraryTechServices/OpenTelemetry
 
