@@ -659,7 +659,7 @@ class Worker():
     @tracer.start_as_current_span("call_api")
     def call_api(self):
         # url = "https://dash.harvard.edu/rest/test"
-        url = os.getenv("DASH_TESTING_URL")
+        url = os.getenv("DASH_TESTING_URL", "https://dash.harvard.edu/rest/test")
         # need verify false b/c using selfsigned certs
         r = requests.get(url, verify=False)
         self.logger.debug("In call api")
