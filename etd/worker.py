@@ -10,8 +10,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
         OTLPSpanExporter)
 from opentelemetry.sdk.resources import SERVICE_NAME
-
-
+# from opentelemetry.trace.propagation.tracecontext \
+#    import TraceContextTextMapPropagator
 import lxml.etree as xmlTree
 # import os, re, sys, shutil, xml.sax
 import re
@@ -664,6 +664,6 @@ class Worker():
         r = requests.get(url, verify=False)
         self.logger.debug("In call api")
         self.logger.debug(r.text)
-        # current_span = trace.get_current_span()
-        # current_span.add_event("in call api")
+        current_span = trace.get_current_span()
+        current_span.add_event("call api url: " + url)
         return r.text
