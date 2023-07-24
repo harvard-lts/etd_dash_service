@@ -22,6 +22,7 @@ import zipfile
 from shlex import quote
 from .xfer_files import xfer_files
 from .constants import instance_data
+from lib.notify import notify
 
 """
 This is a basic worker class.
@@ -64,6 +65,7 @@ class Worker():
     dimNamespace = '{http://www.dspace.org/xmlns/dspace/dim}'
     rightsNamespace = '{http://cosimo.stanford.edu/sdr/metsrights/}'
     dropboxUser = 'proquest'
+    jobCode = 'proquest2dash'
 
     def __init__(self):
         self.version = os.getenv("APP_VERSION", "0.0.1")
@@ -73,17 +75,21 @@ class Worker():
 
     @tracer.start_as_current_span("send_to_dash_worker")
     def send_to_dash(self, message):  # pragma: no cover
-        # global dspace_instance, notifyJM
+        global notifyJM
         # now = datetime.now()
         # dateTimeStamp = now.strftime('%Y%m%d%H')
         # dateTimeStamp = now.strftime('%Y%m%d%H')
         # logFile = os.path.join(logDir, f"{jobCode}_{dateTimeStamp}.log")
-        # notifyJM = notify('monitor+log', jobCode, logFile)
+        notifyJM = notify('monitor', self.jobCode, None)
         # Let the Job Monitor know that the job has started
         # notifyJM.log('pass', f'Start Proquest to ETDs processing', verbose)
-        # notifyJM.report('start')
+        notifyJM.report('start')
 
         aipFiles = self.get_files()
+        if not aipFiles:
+            notifyJM.report('No files found in dropbox')
+            notifyJM.report('complete')
+            return True
 
         self.logger.debug(message)
         filesDir = 'files'
@@ -259,14 +265,14 @@ class Worker():
             etds2AlmaOut.write(f'{schoolCode},{batch}\n')
 
         etds2AlmaOut.close()
-        # notifyJM.report('complete')
+        notifyJM.report('complete')
         self.logger.info('complete')
         current_span.add_event("completed")
         return True
 
     @tracer.start_as_current_span("get_files")
     def get_files(self):  # pragma: no cover
-        # global notifyJM
+        global notifyJM
         dropboxServer = os.getenv("dropboxServer")
         dropboxUser = os.getenv("dropboxUser")
         # homeDir = os.getenv("homeDir")
@@ -288,7 +294,7 @@ class Worker():
                 xfer.close()
                 # notifyJM.log('fail', xfer.error, verbose)
                 self.logger.error(xfer.error)
-                # notifyJM.report('stopped')
+                notifyJM.report('stopped')
                 self.logger.error('stopped')
                 return False
         except Exception as e:
@@ -307,7 +313,7 @@ class Worker():
             xfer.close()
             # notifyJM.log('fail', xfer.error, verbose)
             self.logger.error(xfer.error)
-            # notifyJM.report('stopped')
+            notifyJM.report('stopped')
             self.logger.error('stopped')
             current_span.add_event('stopped')
             return False
@@ -359,7 +365,7 @@ class Worker():
                             # {proquestInDir}', verbose)
                             self.logger.error(f'Failed to create \
                                               {proquestInDir}: {e}')
-                            # notifyJM.report('stopped')
+                            notifyJM.report('stopped')
                             self.logger.error('stopped')
                             current_span.add_event(f'Failed to create \
                                               {proquestInDir}: {e}')
@@ -445,7 +451,7 @@ class Worker():
         else:  # pragma: no cover
             # notifyJM.log('fail', f"{metsFile} not found", verbose)
             self.logger.error(f"{metsFile} not found")
-            # notifyJM.report('stopped')
+            notifyJM.report('stopped')
             self.logger.error("stppped")
             current_span.add_event("stopped")
             return False
