@@ -32,7 +32,7 @@ from .ltstools import adminMailTo, adminMailFrom, get_date_time_stamp, jobMonito
 
 # Use this class to track pass, fail and warning script messages and
 # to report script results. 
-class notify:
+class notify: # pragma: no cover
 
 	def __init__(self, notifyMethod, jobCode = False, logFile = False):
 

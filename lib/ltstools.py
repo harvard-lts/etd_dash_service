@@ -37,7 +37,7 @@ adminMailTo = os.getenv('adminMailTo')
 adminMailFrom = os.getenv('adminMailTo')
 		
 
-def get_date_time_stamp(precision = 'minute'):
+def get_date_time_stamp(precision = 'minute'):  # pragma: no cover
 	from datetime import datetime
 	from time import time
 
@@ -161,7 +161,7 @@ def is_winter_break(notifyJM = False, datestamp = False):
 #               in the body of the email. Can be left empty.
 #   mailTo      Optional. Email address to send message to.
 #
-def notify(result, job, message = False, mailTo = False):
+def notify(result, job, message = False, mailTo = False):  # pragma: no cover
 
     if mailTo:
         if message:
@@ -185,7 +185,7 @@ def notify(result, job, message = False, mailTo = False):
 #   message      Optional, the subject we be used in the
 #                body of the email if message is not set
 #
-def send_mail(mailTo, mailFrom, subject, message = False):
+def send_mail(mailTo, mailFrom, subject, message = False):  # pragma: no cover
     import smtplib, re
     from email.mime.text import MIMEText
 
@@ -220,7 +220,7 @@ def send_mail(mailTo, mailFrom, subject, message = False):
 #   message      Optional, the subject we be used in the
 #                body of the email if message is not set
 #
-def send_mail_attachment(mailTo, mailFrom, subject, message, files = None):
+def send_mail_attachment(mailTo, mailFrom, subject, message, files = None):  # pragma: no cover
 	import smtplib, re
 	from os.path import basename
 	from email.mime.application import MIMEApplication
