@@ -91,7 +91,10 @@ class Worker():
             notifyJM.report('complete')
             return True
 
-        self.logger.debug(message)
+        if "job_ticket_id" in message:
+            job_ticket_id = message['job_ticket_id']
+            notifyJM.log('pass', f'job_ticket_id {job_ticket_id}')
+            self.logger.info(f'job_ticket_id {job_ticket_id}')
         filesDir = 'files'
         csvEtds2Alma = os.path.join(filesDir, 'etds2alma.csv')
         etds2AlmaOut = open(csvEtds2Alma, 'a+')
