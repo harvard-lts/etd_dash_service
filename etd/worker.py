@@ -82,12 +82,12 @@ class Worker():
         # logFile = os.path.join(logDir, f"{jobCode}_{dateTimeStamp}.log")
         notifyJM = notify('monitor', self.jobCode, None)
         # Let the Job Monitor know that the job has started
-        # notifyJM.log('pass', f'Start Proquest to ETDs processing', verbose)
+        notifyJM.log('pass', 'Start Proquest to ETDs processing')
         notifyJM.report('start')
 
         aipFiles = self.get_files()
         if not aipFiles:
-            notifyJM.report('No files found in dropbox')
+            notifyJM.log('pass', 'No files found in dropbox')
             notifyJM.report('complete')
             return True
 
@@ -101,7 +101,7 @@ class Worker():
 
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
-            # notifyJM.log('info', f'Processing {aipFile}', verbose)
+            notifyJM.log('info', f'Processing {aipFile}')
             self.logger.info(f'Processing {aipFile}')
 
             aipDir = os.path.dirname(os.path.abspath(aipFile))
@@ -113,8 +113,7 @@ class Worker():
             if match:
                 self.submissionId = match.group(1)
             else:
-                # notifyJM.log('fail', f'File name {aipFile}
-                # is not supported', verbose)
+                notifyJM.log('fail', f'File name {aipFile} is not supported')
                 self.logger.error(f'File name {aipFile} is not supported')
                 current_span.add_event(f'File name {aipFile} is not supported')
                 continue
@@ -160,20 +159,14 @@ class Worker():
                 current_span.add_event(f"The zip command \
                                   failed in {aipDir}")
                 current_span.record_exception(e)
-            # if proc.returncode > 0:
-                # notifyJM.log('fail', f"The command {zipWithArgs}
-                # failed in {aipDir}", verbose)
-            #     self.logger.error(f"The zip command \
-            #                       failed in {aipDir}")
-            #    continue
+                notifyJM.log('fail', f"The zip command failed in {aipDir}")
 
             proquestOutDir = aipDir.replace('/in/', '/out/')
             if not os.path.isdir(proquestOutDir):
                 try:
                     os.makedirs(proquestOutDir)
                 except Exception as e:
-                    # notifyJM.log('fail', f'Failed to
-                    # create {proquestOutDir}', verbose)
+                    notifyJM.log('fail', f'Failed to create {proquestOutDir}')
                     self.logger.error(f'Failed to create \
                                       {proquestOutDir}: {e}')
                     current_span.set_status(Status(StatusCode.ERROR))
@@ -188,8 +181,7 @@ class Worker():
             dest = f'{self.importUserName}@{self.dspaceHost}:{dashImportFile}'
             proc = self.sh(['scp', '-r', aipFile, dest])
             if proc.returncode == 0:
-                # notifyJM.log('pass', f"Copied AIP package to
-                # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
+                notifyJM.log('pass', f"Copied AIP package to {self.importUserName}@{self.dspaceHost}:{dashImportFile}")  # noqa: E501
                 self.logger.info(f"Copied AIP package to \
                                  {self.importUserName} \
                                  @{self.dspaceHost}:{dashImportFile}")
@@ -197,8 +189,8 @@ class Worker():
                                  {self.importUserName} \
                                  @{self.dspaceHost}:{dashImportFile}")
             else:
-                # notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
-                # {importUserName}@{dspaceHost}:{dashImportFile}", verbose)
+                notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
+                {self.importUserName}@{self.dspaceHost}:{dashImportFile}")
                 self.logger.error(f"Failed to send {aipDir}/{aipFile} to \
                                   {self.importUserName}@{self.dspaceHost}: \
                                   {dashImportFile}")
@@ -218,8 +210,8 @@ class Worker():
                                    '-p', collection_handle,
                                    dashImportFile])
                 if result.returncode == 0:
-                    # notifyJM.log('pass', f"Imported
-                    # {aipDir}/{aipFile} to DSpace", verbose)
+                    notifyJM.log('pass', f"Imported {aipDir}/\
+                                 {aipFile} to DSpace")
                     self.logger.info(f"Imported {aipDir}/ \
                                      {aipFile} to DSpace")
                     handle = self.get_handle(str(result.stdout, 'utf-8'))
@@ -236,7 +228,7 @@ class Worker():
                         \n\n{str(result.stdout, 'utf-8')}\n"
                     message += f"Process error was:\
                         \n\n{str(result.stderr, 'utf-8')}\n"
-                    # notifyJM.log('fail', message, verbose)
+                    notifyJM.log('fail', message)
                     self.logger.error(message)
                     current_span.add_event(message)
                     continue
@@ -247,8 +239,7 @@ class Worker():
             result = self.ssh([self.DSPACE_COMMAND, 'curate', '-t',
                                'citation-update', '-i', collection_handle])
             if result.returncode == 0:
-                # notifyJM.log('pass',
-                # "Ran citation-update curation task", verbose)
+                notifyJM.log('pass', "Ran citation-update curation task")
                 self.logger.info("Ran citation-update curation task")
             else:
                 message = "Couldn't run citation-update curation task"
@@ -258,7 +249,7 @@ class Worker():
                     \n\n{str(result.stdout, 'utf-8')}"
                 message += f"Process error was:\
                     \n\n{str(result.stderr, 'utf-8')}"
-                # notifyJM.log('warn', message, verbose)
+                notifyJM.log('warn', message)
                 self.logger.warn(message)
                 current_span.add_event(message)
 
@@ -292,14 +283,14 @@ class Worker():
                               privateKey=privateKey)
             if xfer.error:
                 xfer.close()
-                # notifyJM.log('fail', xfer.error, verbose)
+                notifyJM.log('fail', xfer.error)
                 self.logger.error(xfer.error)
                 notifyJM.report('stopped')
                 self.logger.error('stopped')
                 return False
         except Exception as e:
-            # notifyJM.log('fail', f'Fail to connect to
-            # {dropboxUser}@{dropboxServer}', verbose)
+            notifyJM.log('fail', f'Fail to connect to \
+                         {dropboxUser}@{dropboxServer}')
             self.logger.error(f'Fail to connect to \
                               {dropboxUser}@{dropboxServer}: {e}')
             current_span.set_status(Status(StatusCode.ERROR))
@@ -311,7 +302,7 @@ class Worker():
         schoolDirs = xfer.listdir('incoming')
         if xfer.error:
             xfer.close()
-            # notifyJM.log('fail', xfer.error, verbose)
+            notifyJM.log('fail', xfer.error)
             self.logger.error(xfer.error)
             notifyJM.report('stopped')
             self.logger.error('stopped')
@@ -329,7 +320,7 @@ class Worker():
 
                 schoolFiles = xfer.listdir(f'incoming/{schoolCode}')
                 if xfer.error:
-                    # notifyJM.log('fail', xfer.error, verbose)
+                    notifyJM.log('fail', xfer.error)
                     self.logger.error(xfer.error)
                     current_span.add_event(xfer.error)
                     continue
@@ -345,8 +336,8 @@ class Worker():
                     if match:
                         submissionId = match.group(1)
                     else:
-                        # notifyJM.log('fail', f'File name {schoolFile}
-                        #  is not supported', verbose)
+                        notifyJM.log('fail', f'File name {schoolFile}\
+                         is not supported')
                         self.logger.error(f'File name {schoolFile} \
                                           is not supported')
                         current_span.add_event('File name {schoolFile} \
@@ -361,8 +352,8 @@ class Worker():
                             os.makedirs(proquestInDir)
                         except Exception as e:
                             xfer.close()
-                            # notifyJM.log('fail', f'Failed to create
-                            # {proquestInDir}', verbose)
+                            notifyJM.log('fail', f'Failed to create \
+                                         {proquestInDir}')
                             self.logger.error(f'Failed to create \
                                               {proquestInDir}: {e}')
                             notifyJM.report('stopped')
@@ -377,13 +368,13 @@ class Worker():
                         xfer.get_file(f'incoming/{schoolCode}/{schoolFile}',
                                       f'{proquestInDir}/{schoolFile}')
                         if xfer.error:
-                            # notifyJM.log('fail', xfer.error, verbose)
+                            notifyJM.log('fail', xfer.error)
                             self.logger.error(xfer.error)
                             current_span.add_event(xfer.error)
                             continue
                     except Exception as e:
-                        # notifyJM.log('fail', f'Fail to sftp {dropboxServer}:
-                        # incoming/{schoolCode}/{schoolFile}', verbose)
+                        notifyJM.log('fail', f'Fail to sftp {dropboxServer}:\
+                         incoming/{schoolCode}/{schoolFile}')
                         self.logger.error(f'Fail to sftp {dropboxServer}: \
                                           incoming/{schoolCode}/{schoolFile}: \
                                             {e}')
@@ -399,12 +390,11 @@ class Worker():
                         xfer.rename(f'incoming/{schoolCode}/{schoolFile}',
                                     f'archives/{schoolCode}/{schoolFile}')
                         if xfer.error:
-                            # notifyJM.log('fail', xfer.error, verbose)
+                            notifyJM.log('fail', xfer.error)
                             self.logger.error(xfer.error)
                     except Exception as e:
-                        # notifyJM.log('fail', f'Fail to archive
-                        # {dropboxServer}:incoming/{schoolCode}/{schoolFile}',
-                        # verbose)
+                        notifyJM.log('fail', f'Fail to archive \
+                        {dropboxServer}:incoming/{schoolCode}/{schoolFile}')
                         self.logger.error(f'Fail to archive {dropboxServer}: \
                                           incoming/{schoolCode}/{schoolFile}: \
                                           {e}')
@@ -416,8 +406,8 @@ class Worker():
                         current_span.record_exception(e)
                         continue
 
-                    # notifyJM.log('pass', f'Received {schoolCode}:
-                    # {schoolFile}', verbose)
+                    notifyJM.log('pass', f'Received {schoolCode}: \
+                                 {schoolFile}')
                     aipFiles.append([schoolCode, batch,
                                      f'{proquestInDir}/{schoolFile}'])
 
@@ -444,12 +434,11 @@ class Worker():
                 treeMets = xmlTree.parse(metsFile)
                 rootMets = treeMets.getroot()
             except Exception as e:  # pragma: no covers
-                # notifyJM.log('fail', f'Failed to
-                # load xml from {metsFile}', verbose)
+                notifyJM.log('fail', f'Failed to load xml from {metsFile}')
                 self.logger.error(f'Failed to load xml from {metsFile}: {e}')
                 return False
         else:  # pragma: no cover
-            # notifyJM.log('fail', f"{metsFile} not found", verbose)
+            notifyJM.log('fail', f"{metsFile} not found")
             self.logger.error(f"{metsFile} not found")
             notifyJM.report('stopped')
             self.logger.error("stppped")
@@ -535,8 +524,8 @@ class Worker():
             # Check for an embargo. Replace 5 digit year dates.
             elif dimField.attrib['mdschema'] == 'dash':  # pragma: no cover # noqa: E501
                 if (dimField.attrib['element'] == 'embargo'):
-                    # notifyJM.log('info', f"{aipDir}/mets.xml: Embargo
-                    # information found", verbose)
+                    notifyJM.log('info', f"{aipDir}/mets.xml: \
+                                 Embargo information found")
                     self.logger.info(f"{aipDir}/mets.xml: \
                                      Embargo information found")
                     current_span.add_event(f"{aipDir}/mets.xml: \
@@ -553,10 +542,9 @@ class Worker():
                                         dimField.attrib['qualifier'] ==
                                         'terms'):
                                     if dimField.text == '10000-01-01':
-                                        # notifyJM.log('warn', f"Batch {batch}
-                                        # will not be sent to Dash due to
-                                        # permanentEmbargo information found",
-                                        # verbose)
+                                        notifyJM.log('warn', f"Batch {batch} \
+                                        will not be sent to Dash due to \
+                                        permanentEmbargo information found")
                                         sendToDash = False
                                 else:
                                     dimField.text = f'9999{match.group(1)}'
@@ -657,8 +645,7 @@ class Worker():
                 if match:
                     return match.group(1)
                 else:
-                    # notifyJM.log('warn', f"No handle in output:
-                    # {output}", verbose)
+                    notifyJM.log('warn', f"No handle in output: {output}")
                     self.logger.warn(f"No handle in output: {output}")
 
     # this is call to the DASH healthcheck for integration testing
