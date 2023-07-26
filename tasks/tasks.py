@@ -50,7 +50,7 @@ def send_to_dash(json_message):
             # new_message[FEATURE_FLAGS] = feature_flags
             new_message["traceparent"] = traceparent
             if (DASH_FEATURE_FLAG in feature_flags and
-                    feature_flags[DASH_FEATURE_FLAG] == "on"):
+                    feature_flags[DASH_FEATURE_FLAG] == "on"):  # pragma: no cover, unit test should not run send_to_dash # noqa: E501
                 # Send to DASH
                 logger.debug("FEATURE IS ON>>>>>SEND TO DASH")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DASH")
@@ -71,7 +71,7 @@ def send_to_dash(json_message):
         if "unit_test" in json_message:
             return new_message
 
-        current_span.add_event("to next queue")
+        current_span.add_event("to next queue")  # pragma: no cover, unit tests end before this span # noqa: E501
         app.send_task("etd-alma-service.tasks.send_to_alma",
                       args=[new_message], kwargs={},
-                      queue=os.getenv('PUBLISH_QUEUE_NAME'))
+                      queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, unit tests should not progress the message # noqa: E501
