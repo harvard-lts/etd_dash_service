@@ -1,10 +1,15 @@
 from celery import Celery
 import os
+from datetime import datetime
+
+now = datetime.now()
+timestamp = now.strftime("%Y%m%d%H%M")
+job_ticket_id = f"{timestamp}_etd_dash_invoke_task"
 
 app1 = Celery('tasks')
 app1.config_from_object('celeryconfig')
 
-arguments = {"hello": "world", "feature_flags": {
+arguments = {"job_ticket_id": job_ticket_id, "feature_flags": {
             'dash_feature_flag': "on",
             'alma_feature_flag': "off",
             'send_to_drs_feature_flag': "off",
