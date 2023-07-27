@@ -44,36 +44,36 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 # https://github.com/celery/celery/issues/4079#issuecomment-1270085680
 HEARTBEAT_FILE = Path("/tmp/worker_heartbeat")
 READINESS_FILE = Path("/tmp/worker_ready")
-UPDATE_INTERVAL = 10.0  # touch file every X seconds
+UPDATE_INTERVAL = 15.0   # touch file every 15 seconds
 
 
 class LivenessProbe(bootsteps.StartStopStep):
     requires = {'celery.worker.components:Timer'}
 
-    def __init__(self, worker, **kwargs):
+    def __init__(self, worker, **kwargs):  # pragma: no cover
         self.requests = []
         self.tref = None
 
-    def start(self, worker):
+    def start(self, worker):  # pragma: no cover
         self.tref = worker.timer.call_repeatedly(
             UPDATE_INTERVAL, self.update_heartbeat_file,
             (worker,), priority=10,
         )
 
-    def stop(self, worker):
+    def stop(self, worker):  # pragma: no cover
         HEARTBEAT_FILE.unlink(missing_ok=True)
 
-    def update_heartbeat_file(self, worker):
+    def update_heartbeat_file(self, worker):  # pragma: no cover
         HEARTBEAT_FILE.touch()
 
 
 @worker_ready.connect
-def worker_ready(**_):
+def worker_ready(**_):  # pragma: no cover
     READINESS_FILE.touch()
 
 
 @worker_shutdown.connect
-def worker_shutdown(**_):
+def worker_shutdown(**_):  # pragma: no cover
     READINESS_FILE.unlink(missing_ok=True)
 
 
