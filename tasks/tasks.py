@@ -44,7 +44,7 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 # https://github.com/celery/celery/issues/4079#issuecomment-1270085680
 hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
 ready_path = os.getenv("READINESS_FILE", "/tmp/worker_ready")
-update_interval = float(os.getenv("UPDATE_INTERVAL", 15.0))
+update_interval = float(os.getenv("HEALTHCHECK_UPDATE_INTERVAL", 15.0))
 HEARTBEAT_FILE = Path(hbeat_path)
 READINESS_FILE = Path(ready_path)
 UPDATE_INTERVAL = update_interval  # touch file every 15 seconds
@@ -80,7 +80,6 @@ def worker_shutdown(**_):  # pragma: no cover
     READINESS_FILE.unlink(missing_ok=True)
 
 
-app = Celery("appname")
 app.steps["worker"].add(LivenessProbe)
 
 
