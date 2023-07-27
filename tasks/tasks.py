@@ -42,9 +42,12 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 # heartbeat setup
 # code is from
 # https://github.com/celery/celery/issues/4079#issuecomment-1270085680
-HEARTBEAT_FILE = Path("/tmp/worker_heartbeat")
-READINESS_FILE = Path("/tmp/worker_ready")
-UPDATE_INTERVAL = 15.0   # touch file every 15 seconds
+hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
+ready_path = os.getenv("READINESS_FILE", "/tmp/worker_ready")
+update_interval = float(os.getenv("UPDATE_INTERVAL", 15.0))
+HEARTBEAT_FILE = Path(hbeat_path)
+READINESS_FILE = Path(ready_path)
+UPDATE_INTERVAL = update_interval  # touch file every 15 seconds
 
 
 class LivenessProbe(bootsteps.StartStopStep):
