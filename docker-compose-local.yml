@@ -13,7 +13,7 @@ services:
     volumes:
       - './:/home/etdadm'
       - '/tmp:/tmp'
-      - './data:/home/etdadm/data'
+      - '/tmp/etd_dash_data:/home/etdadm/data'
       - './files:/home/etdadm/files'  
     env_file:
       - '.env'
