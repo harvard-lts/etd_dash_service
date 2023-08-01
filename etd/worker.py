@@ -96,7 +96,7 @@ class Worker():
             notifyJM.report('complete')
             return True
 
-        filesDir = 'files'
+        filesDir = '/home/etdadm/files'
         csvEtds2Alma = os.path.join(filesDir, 'etds2alma.csv')
         etds2AlmaOut = open(csvEtds2Alma, 'a+')
 
@@ -274,7 +274,7 @@ class Worker():
         privateKey = os.getenv("PRIVATE_KEY_PATH")
         now = datetime.now()
         datestamp = now.strftime('%Y%m%d%H')
-        dataDir = 'data'
+        dataDir = '/home/etdadm/data'
         dataInDir = os.path.join(dataDir, "in")
         aipFiles = []
 
