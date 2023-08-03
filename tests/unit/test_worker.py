@@ -85,7 +85,8 @@ class TestWorkerClass():
         metsBeforeFile = os.path.join(aipDir, "mets_before.xml")
         shutil.copy(metsBeforeFile, os.path.join(aipDir, "mets.xml"))
         metsFile = os.path.join(aipDir, "mets.xml")
-        worker.rewrite_mets(aipDir, batch, schoolCode)
+        json_message = {}
+        worker.rewrite_mets(aipDir, batch, schoolCode, json_message)
         # doc_before = ET.parse(os.path.join(aipDir, "mets.xml"))
         doc = ET.parse(metsFile)
 
