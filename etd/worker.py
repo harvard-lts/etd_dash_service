@@ -136,8 +136,14 @@ class Worker():
             os.remove(aipFile)
 
             # Rewrite mets file remapping a few elements
-            if not self.rewrite_mets(aipDir, batch, schoolCode):
+            if not self.rewrite_mets(aipDir, batch, schoolCode, message):
                 continue
+
+            # get proquest identifier from json message
+            if "identifier" in message:
+                current_span.set_attribute("identifier",
+                                           message["identifier"])
+
             # Zip package back up with updated mets file
             # zipWithArgs = ['zip', aipFile]
             # for file in os.listdir('.'):
@@ -421,7 +427,7 @@ class Worker():
 
     # A few fields need to be remapped in the xml
     @tracer.start_as_current_span("rewrite_mets")
-    def rewrite_mets(self, aipDir, batch, schoolCode):
+    def rewrite_mets(self, aipDir, batch, schoolCode, json_message):
         global notifyJM
         underGrad = False
         masters = False
@@ -475,6 +481,17 @@ class Worker():
                         if dimField.attrib['qualifier'] == 'subject':
                             dimField.attrib['element'] = 'subject'
                             dimField.attrib.pop('qualifier')
+                    except Exception as e:  # pragma: no cover
+                        self.logger.info(e)
+                        current_span.record_exception(e)
+                        continue
+
+                elif dimField.attrib['element'] == 'identifier':
+                    try:   # pragma: no cover
+                        proquest_identifier = dimField.text
+                        json_message["identifier"] = proquest_identifier
+                        current_span.set_attribute("identifier",
+                                                   proquest_identifier)
                     except Exception as e:  # pragma: no cover
                         self.logger.info(e)
                         current_span.record_exception(e)
