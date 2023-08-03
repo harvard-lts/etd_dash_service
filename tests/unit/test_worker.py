@@ -116,7 +116,7 @@ class TestWorkerClass():
                          namespaces=namespace_mapping)[0].\
             text == "Masters"
 
-        assert int(json_message["identfier"]) == 30522803
+        assert int(json_message["identifier"]) == 30522803
 
         # test the exceptions with a bad mets.xml
         '''metsEmptyFile = os.path.join(aipDir, "mets_bad.xml")
