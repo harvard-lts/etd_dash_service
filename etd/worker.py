@@ -492,6 +492,8 @@ class Worker():
                         json_message["identifier"] = proquest_identifier
                         current_span.set_attribute("identifier",
                                                    proquest_identifier)
+                        self.logger.info("proquest id: " +
+                                         str(proquest_identifier))
                     except Exception as e:  # pragma: no cover
                         self.logger.info(e)
                         current_span.record_exception(e)
