@@ -105,6 +105,12 @@ def send_to_dash(json_message):
                 worker = Worker()
                 msg = worker.send_to_dash(json_message)
                 logger.debug(msg)
+                if 'identifier' in json_message:
+                    proquest_identifier = json_message['identifier']
+                    new_message['identifier'] = proquest_identifier
+                    current_span.set_attribute("identifier",
+                                               proquest_identifier)
+                    logger.debug("processing id: " + str(proquest_identifier))
 
             else:
                 # Feature is off so do hello world

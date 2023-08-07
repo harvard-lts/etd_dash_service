@@ -85,7 +85,8 @@ class TestWorkerClass():
         metsBeforeFile = os.path.join(aipDir, "mets_before.xml")
         shutil.copy(metsBeforeFile, os.path.join(aipDir, "mets.xml"))
         metsFile = os.path.join(aipDir, "mets.xml")
-        worker.rewrite_mets(aipDir, batch, schoolCode)
+        json_message = {}
+        worker.rewrite_mets(aipDir, batch, schoolCode, json_message)
         # doc_before = ET.parse(os.path.join(aipDir, "mets.xml"))
         doc = ET.parse(metsFile)
 
@@ -114,6 +115,8 @@ class TestWorkerClass():
         assert doc.xpath("//dim:field[@qualifier='level']",
                          namespaces=namespace_mapping)[0].\
             text == "Masters"
+
+        assert int(json_message["identifier"]) == 30522803
 
         # test the exceptions with a bad mets.xml
         '''metsEmptyFile = os.path.join(aipDir, "mets_bad.xml")
