@@ -59,7 +59,6 @@ class Worker():
     dspaceImportDir = f'{dspaceHome}/import'
     dspaceHost = os.getenv("dspaceHost")
     importUserName = 'dspace'
-    DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
     handler2nrs = '/home/osc/proj/dashdump/data/tsv/handle2nrs.tsv'
     dimNamespace = '{http://www.dspace.org/xmlns/dspace/dim}'
     rightsNamespace = '{http://cosimo.stanford.edu/sdr/metsrights/}'
@@ -139,15 +138,13 @@ class Worker():
                 continue
 
             # get proquest identifier from json message
+            identifier = None
             if "identifier" in message:
+                identifier = message["identifier"]
                 current_span.set_attribute("identifier",
                                            message["identifier"])
 
             # Zip package back up with updated mets file
-            # zipWithArgs = ['zip', aipFile]
-            # for file in os.listdir('.'):
-            #     zipWithArgs.append(file)
-            # proc = self.sh(zipWithArgs)
             try:
                 # proc = run(['zip', '-r', aipFile, aipDir])
                 current_directory = os.getcwd()
@@ -184,85 +181,96 @@ class Worker():
                     current_span.record_exception(e)
                     continue
 
-            collection_handle = instance_data[schoolCode]['handle']
-            dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
-
-            dest = f'{self.importUserName}@{self.dspaceHost}:{dashImportFile}'
-            proc = self.sh(['scp', '-r', aipFile, dest])
-            if proc.returncode == 0:
-                notifyJM.log('pass', f"Copied AIP package to {self.importUserName}@{self.dspaceHost}:{dashImportFile}")  # noqa: E501
-                self.logger.info(f"Copied AIP package to \
-                                 {self.importUserName} \
-                                 @{self.dspaceHost}:{dashImportFile}")
-                current_span.add_event(f"Copied AIP package to \
-                                 {self.importUserName} \
-                                 @{self.dspaceHost}:{dashImportFile}")
+            # use api to check for duplicate and end if so
+            if identifier is None:
+                logging.error("Has no proquest id")
+            elif self.check_for_duplicates(identifier):
+                logging.error("Duplicate")
             else:
-                notifyJM.log('fail', f"Failed to send {aipDir}/{aipFile} to \
-                {self.importUserName}@{self.dspaceHost}:{dashImportFile}")
-                self.logger.error(f"Failed to send {aipDir}/{aipFile} to \
-                                  {self.importUserName}@{self.dspaceHost}: \
-                                  {dashImportFile}")
-                current_span.add_event(f"Failed to send {aipDir}/{aipFile} to \
-                                  {self.importUserName}@{self.dspaceHost}: \
-                                  {dashImportFile}")
-                continue
+                collection_handle = instance_data[schoolCode]['handle']
+                dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
 
-            # Import to DASH
-            sub2handle = {}  # we keep mapfile as an on-disk record
-            with open(os.path.join(proquestOutDir, "mapfile"), 'w') as mapfile:
-
-                sub_id = aipFile.rstrip('.zip')
-                result = self.ssh([self.DSPACE_COMMAND, 'packager', '-s', '-w',
-                                   '-t', 'AIP',
-                                   '-e', 'hl_dash_admin@harvard.edu',
-                                   '-p', collection_handle,
-                                   dashImportFile])
-                if result.returncode == 0:
-                    notifyJM.log('pass', f"Imported {aipDir}/\
-                                 {aipFile} to DSpace")
-                    self.logger.info(f"Imported {aipDir}/ \
-                                     {aipFile} to DSpace")
-                    handle = self.get_handle(str(result.stdout, 'utf-8'))
-                    sub2handle[sub_id] = handle
-                    self.logger.info(f'{sub_id} {handle} {mapfile}')
+                dest = f'{self.importUserName}@{self.dspaceHost}:\
+                    {dashImportFile}'
+                proc = self.sh(['scp', '-r', aipFile, dest])
+                if proc.returncode == 0:
+                    notifyJM.log('pass', f"Copied AIP package to {self.importUserName}@{self.dspaceHost}:{dashImportFile}")  # noqa: E501
+                    self.logger.info(f"Copied AIP package to \
+                                    {self.importUserName} \
+                                    @{self.dspaceHost}:{dashImportFile}")
+                    current_span.add_event(f"Copied AIP package to \
+                                    {self.importUserName} \
+                                    @{self.dspaceHost}:{dashImportFile}")
                 else:
-                    message = f"DSpace import failed \
-                        for {aipDir}/{aipFile}.\n"
-                    message += f"Command run was: \
-                        {' '.join(result.args)}\n"
-                    message += f"Process return code was: \
-                        {result.returncode}\n"
-                    message += f"Process output was:\
-                        \n\n{str(result.stdout, 'utf-8')}\n"
-                    message += f"Process error was:\
-                        \n\n{str(result.stderr, 'utf-8')}\n"
-                    notifyJM.log('fail', message)
-                    self.logger.error(message)
-                    current_span.add_event(message)
+                    notifyJM.log('fail', f"Failed to send \
+                                 {aipDir}/{aipFile} to \
+                    {self.importUserName}@{self.dspaceHost}:{dashImportFile}")
+                    self.logger.error(f"Failed to send {aipDir}/{aipFile} to \
+                                    {self.importUserName}@{self.dspaceHost}: \
+                                    {dashImportFile}")
+                    current_span.add_event(f"Failed to send \
+                                           {aipDir}/{aipFile} to \
+                                    {self.importUserName}@{self.dspaceHost}: \
+                                    {dashImportFile}")
                     continue
 
-            # handles = set(sub2handle.values())
+                # Import to DASH
+                sub2handle = {}  # we keep mapfile as an on-disk record
+                with open(os.path.join(proquestOutDir,
+                                       "mapfile"), 'w') as mapfile:
 
-            # run citation-update curation task
-            result = self.ssh([self.DSPACE_COMMAND, 'curate', '-t',
-                               'citation-update', '-i', collection_handle])
-            if result.returncode == 0:
-                notifyJM.log('pass', "Ran citation-update curation task")
-                self.logger.info("Ran citation-update curation task")
-            else:
-                message = "Couldn't run citation-update curation task"
-                message += f'Command run was: {" ".join(result.args)}'
-                message += f"Process return code was: {result.returncode}"
-                message += f"Process output was:\
-                    \n\n{str(result.stdout, 'utf-8')}"
-                message += f"Process error was:\
-                    \n\n{str(result.stderr, 'utf-8')}"
-                notifyJM.log('warn', message)
-                self.logger.warn(message)
-                current_span.add_event(message)
+                    sub_id = aipFile.rstrip('.zip')
+                    result = self.ssh([self.DSPACE_COMMAND, 'packager', '-s',
+                                       '-w',
+                                       '-t', 'AIP',
+                                       '-e', 'hl_dash_admin@harvard.edu',
+                                       '-p', collection_handle,
+                                       dashImportFile])
+                    if result.returncode == 0:
+                        notifyJM.log('pass', f"Imported {aipDir}/\
+                                    {aipFile} to DSpace")
+                        self.logger.info(f"Imported {aipDir}/ \
+                                        {aipFile} to DSpace")
+                        handle = self.get_handle(str(result.stdout, 'utf-8'))
+                        sub2handle[sub_id] = handle
+                        self.logger.info(f'{sub_id} {handle} {mapfile}')
+                    else:
+                        message = f"DSpace import failed \
+                            for {aipDir}/{aipFile}.\n"
+                        message += f"Command run was: \
+                            {' '.join(result.args)}\n"
+                        message += f"Process return code was: \
+                            {result.returncode}\n"
+                        message += f"Process output was:\
+                            \n\n{str(result.stdout, 'utf-8')}\n"
+                        message += f"Process error was:\
+                            \n\n{str(result.stderr, 'utf-8')}\n"
+                        notifyJM.log('fail', message)
+                        self.logger.error(message)
+                        current_span.add_event(message)
+                        continue
 
-            etds2AlmaOut.write(f'{schoolCode},{batch}\n')
+                # handles = set(sub2handle.values())
+
+                # run citation-update curation task
+                result = self.ssh([self.DSPACE_COMMAND, 'curate', '-t',
+                                  'citation-update', '-i', collection_handle])
+                if result.returncode == 0:
+                    notifyJM.log('pass', "Ran citation-update curation task")
+                    self.logger.info("Ran citation-update curation task")
+                else:
+                    message = "Couldn't run citation-update curation task"
+                    message += f'Command run was: {" ".join(result.args)}'
+                    message += f"Process return code was: {result.returncode}"
+                    message += f"Process output was:\
+                        \n\n{str(result.stdout, 'utf-8')}"
+                    message += f"Process error was:\
+                        \n\n{str(result.stderr, 'utf-8')}"
+                    notifyJM.log('warn', message)
+                    self.logger.warn(message)
+                    current_span.add_event(message)
+
+                etds2AlmaOut.write(f'{schoolCode},{batch}\n')
 
         etds2AlmaOut.close()
         notifyJM.report('complete')
@@ -674,8 +682,9 @@ class Worker():
     @tracer.start_as_current_span("call_api")
     def call_api(self):
         # url = "https://dash.harvard.edu/rest/test"
-        url = os.getenv("DASH_TESTING_URL",
-                        "https://dash.harvard.edu/rest/test")
+        rest_url = os.getenv("DASH_REST_URL",
+                             "https://dash.harvard.edu/rest")
+        url = rest_url + "/test"
         # need verify false b/c using selfsigned certs
         r = requests.get(url, verify=False)
         self.logger.debug("In call api")
@@ -683,3 +692,14 @@ class Worker():
         current_span = trace.get_current_span()
         current_span.add_event("call api url: " + url)
         return r.text
+
+    def check_for_duplicates(self, identifier):
+        rest_url = os.getenv("DASH_REST_URL",
+                             "https://dash.harvard.edu/rest")
+        query_url = f"{rest_url}/rest/items/find-by-metadata-field"
+        json_query = {"key": "dc.identifier.other", "value": identifier}
+        resp = requests.post(query_url, json=json_query, verify=False)
+        if resp.text == "[]":
+            return True
+        else:
+            return False
