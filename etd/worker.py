@@ -180,7 +180,7 @@ class Worker():
                                       {proquestOutDir}: {e}')
                     current_span.record_exception(e)
                     continue
-            self.logger.info(f'IDENTIFIER: {identifier}')    
+            self.logger.info(f'IDENTIFIER: {identifier}')
             # use api to check for duplicate and end if so
             if identifier is None:
                 self.logger.error(f'No proquest for {aipFile}')
