@@ -11,8 +11,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
 HEARTBEAT_FILE = Path(hbeat_path)
 HEARTBEAT_WINDOW = int(os.getenv("HEARTBEAT_WINDOW", 60))
-DASH_HEALTHCHECK_URL = os.getenv("DASH_TESTING_URL",
-                                 "https://dash.harvard.edu/rest/test")
+DASH_REST_URL = os.getenv("DASH_REST_URL",
+                          "https://dash.harvard.edu/rest")
+DASH_HEALTHCHECK_URL = DASH_REST_URL + "/test"
 DROPBOX_SERVER = os.getenv("dropboxServer")
 DROPBOX_USER = os.getenv("dropboxUser")
 PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH")
