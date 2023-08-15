@@ -13,6 +13,10 @@ class MockDuplicateResponse:
     text = '{"has": "content"}'
 
 
+class MockNoDuplicateResponse:
+    text = '[]'
+
+
 class TestWorkerClass():
 
     def test_version(self):
@@ -152,3 +156,13 @@ class TestWorkerClass():
         # since we are mocking a post response with content other than []
         # we expect that duplicate is true (otherwise would be empty [])
         assert msg is True
+
+        def mock_post(*args, **kwargs):
+            return MockNoDuplicateResponse()
+
+        # apply the monkeypatch for requests.get to mock_get
+        monkeypatch.setattr(requests, "post", mock_post)
+        msg = worker.check_for_duplicates(123)
+        # since we are mocking a post response with []
+        # we expect that duplicate is false (b/c expected resp is empty [])
+        assert msg is False
