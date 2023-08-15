@@ -3,11 +3,14 @@ import requests
 import shutil
 import lxml.etree as ET
 import os
-# import unittest
 
 
 class MockResponse:
     text = "REST api is running."
+
+
+class MockDuplicateResponse:
+    text = '{"has": "content"}'
 
 
 class TestWorkerClass():
@@ -38,7 +41,7 @@ class TestWorkerClass():
 
         # apply the monkeypatch for requests.get to mock_get
         monkeypatch.setattr(requests, "get", mock_get)
-        expected_msg = "REST api is NOT runningx."
+        expected_msg = "REST api is NOT running."
         msg = worker.call_api()
         assert msg != expected_msg
 
@@ -135,3 +138,17 @@ class TestWorkerClass():
             assert resp == False
         except Exception as e:
             assert e is None'''
+
+    def test_check_for_duplicates(self, monkeypatch):
+        worker = Worker()
+        # text = '{"has": "content"}'
+
+        def mock_post(*args, **kwargs):
+            return MockDuplicateResponse()
+
+        # apply the monkeypatch for requests.get to mock_get
+        monkeypatch.setattr(requests, "post", mock_post)
+        msg = worker.check_for_duplicates(123)
+        # since we are mocking a post response with content other than []
+        # we expect that duplicate is true (otherwise would be empty [])
+        assert msg is True
