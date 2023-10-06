@@ -191,9 +191,6 @@ class Worker():
                 notifyJM.log('fail', f'{identifier} is a duplicate')
                 # form the dupe directory for the aip
                 dupe_dir = aipDir.replace('/incoming/', '/dupe/')
-                # create dupe_dir if it doesn't exist
-                if not os.path.exists(dupe_dir):
-                    self.make_directory(dupe_dir)
                 # move the aip to the dupe_dir
                 self.rename_directory(aipDir, dupe_dir)
                 continue
@@ -716,16 +713,10 @@ class Worker():
         else:
             return True
 
-    # rename a directory and throw exception if it fails
+    # rename a directory and throw exception if it fails.
+    # this will create directories as needed.
     def rename_directory(self, old_dir, new_dir):
         try:
-            os.rename(old_dir, new_dir)
-        except Exception as e:
-            raise e
-
-    # make a directory if it doesn't exist and throw exception if it fails
-    def make_directory(self, directory):
-        try:
-            os.makedirs(directory)
+            os.renames(old_dir, new_dir)
         except Exception as e:
             raise e

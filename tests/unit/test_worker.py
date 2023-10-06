@@ -166,3 +166,33 @@ class TestWorkerClass():
         # since we are mocking a post response with []
         # we expect that duplicate is false (b/c expected resp is empty [])
         assert msg is False
+
+    # test Worker Class rename_directory function
+    def test_rename_directory(self):
+        testDir = "./tests/data/in/testDir"
+        outputDir = "./tests/data/out/testDir"
+        # make sure outputDir does not exist
+        try:
+            os.rmdir(outputDir)
+        except Exception:
+            pass
+        # create testDir
+        try:
+            os.mkdir(testDir)
+        except Exception:
+            pass
+        assert os.path.isdir(testDir) is True
+        assert os.path.isdir(outputDir) is False
+        worker = Worker()
+        worker.rename_directory(testDir, outputDir)
+        assert os.path.isdir(testDir) is False
+        assert os.path.isdir(outputDir) is True
+        # cleanup test and output dirs
+        try:
+            os.rmdir(testDir)
+        except Exception:
+            pass
+        try:
+            os.rmdir(outputDir)
+        except Exception:
+            pass
