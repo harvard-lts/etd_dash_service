@@ -58,7 +58,8 @@ NOTE: you should see a pipeline with your new tag.  (if not, click on the "scan 
 ### Prerequisites to running docker locally
 - Requires telemetry/jaeger docker running
 - Make sure .env has JAEGER_NAME and JAEGER_SERVICE_NAME (see .env.example)
-- - Note JAEGER_NAME must have local ip (if on vpn go to Cisco Icon -> Show Statistics Window -> CLient Address (IPv4)
+  - Note: the example below creates/joins `etd-net`, the same network as `etd-dash-service`. 
+  - Alternatively, JAEGER_NAME can  reference a local ip (if on vpn go to Cisco Icon -> Show Statistics Window -> CLient Address (IPv4))
 - start jaeger docker
   - `docker pull jaegertracing/all-in-one:latest` followed by
   - `docker network create etd-net` (create docker network, if not there; container will join network in the next command)
