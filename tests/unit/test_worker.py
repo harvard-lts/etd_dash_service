@@ -168,31 +168,74 @@ class TestWorkerClass():
         assert msg is False
 
     # test Worker Class rename_directory function
-    def test_rename_directory(self):
-        testDir = "./tests/data/in/testDir"
-        outputDir = "./tests/data/out/testDir"
+    def test_rename_directory_success(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
         # make sure outputDir does not exist
         try:
-            os.rmdir(outputDir)
+            os.rmdir(destDir)
         except Exception:
             pass
         # create testDir
         try:
-            os.mkdir(testDir)
+            os.mkdir(srcDir)
         except Exception:
             pass
-        assert os.path.isdir(testDir) is True
-        assert os.path.isdir(outputDir) is False
+        assert os.path.isdir(srcDir) is True
+        assert os.path.isdir(destDir) is False
         worker = Worker()
-        worker.rename_directory(testDir, outputDir)
-        assert os.path.isdir(testDir) is False
-        assert os.path.isdir(outputDir) is True
+        worker.rename_directory(srcDir, destDir)
+        assert os.path.isdir(srcDir) is False
+        assert os.path.isdir(destDir) is True
         # cleanup test and output dirs
         try:
-            os.rmdir(testDir)
+            os.rmdir(srcDir)
         except Exception:
             pass
         try:
-            os.rmdir(outputDir)
+            os.rmdir(destDir)
+        except Exception:
+            pass
+
+    # test rename_directory function failure. 
+    # failure occurs when src_dir does not exist
+    def test_rename_directory_failure_src_not_exists(self):
+        srcDir = "./tests/data/in/random_dir_name"
+        destDir = "./tests/data/out/testDir"
+        assert os.path.exists(srcDir) is False
+        worker = Worker()
+        try:
+            worker.rename_directory(srcDir, destDir)
+        except Exception as e:
+            assert "No such file or directory" in str(e)
+
+    # test rename_directory function failure. 
+    # failure occurs when dest_dir already exists
+    def test_rename_directory_failure_dest_exists(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
+        assert os.path.exists(srcDir) is False
+        assert os.path.exists(destDir) is False
+        # create testDir
+        try:
+            os.mkdir(srcDir)
+        except Exception:
+            pass
+        os.makedirs(destDir)
+        assert os.path.exists(srcDir) is True
+        assert os.path.exists(destDir) is True
+        worker = Worker()
+        try:
+            worker.rename_directory(srcDir, destDir)
+        except Exception as e:
+            assert "Destination directory " + destDir + " exists" in str(e)
+            print(e)
+        # cleanup test and output dirs
+        try:
+            os.rmdir(srcDir)
+        except Exception:
+            pass
+        try:
+            os.rmdir(destDir)
         except Exception:
             pass

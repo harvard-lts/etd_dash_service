@@ -715,8 +715,10 @@ class Worker():
 
     # rename a directory and throw exception if it fails.
     # this will create directories as needed.
-    def rename_directory(self, old_dir, new_dir):
+    def rename_directory(self, src_dir, dest_dir):
+        if os.path.exists(dest_dir):
+            raise Exception(f"Destination directory {dest_dir} exists")
         try:
-            os.renames(old_dir, new_dir)
+            os.renames(src_dir, dest_dir)
         except Exception as e:
             raise e
