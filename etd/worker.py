@@ -715,7 +715,7 @@ class Worker():
             return False
         else:
             return True
-    
+
     # rename a directory and throw exception if it fails
     def rename_directory(self, old_dir, new_dir):
         try:
