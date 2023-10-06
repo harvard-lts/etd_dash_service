@@ -197,7 +197,7 @@ class TestWorkerClass():
         except Exception:
             pass
 
-    # test rename_directory function failure. 
+    # test rename_directory function failure.
     # failure occurs when src_dir does not exist
     def test_rename_directory_failure_src_not_exists(self):
         srcDir = "./tests/data/in/random_dir_name"
@@ -209,7 +209,7 @@ class TestWorkerClass():
         except Exception as e:
             assert "No such file or directory" in str(e)
 
-    # test rename_directory function failure. 
+    # test rename_directory function failure.
     # failure occurs when dest_dir already exists
     def test_rename_directory_failure_dest_exists(self):
         srcDir = "./tests/data/in/testDir"
