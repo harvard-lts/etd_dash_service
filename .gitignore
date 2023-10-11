@@ -169,3 +169,4 @@ cython_debug/
 /.bash_history
 /.pydevproject
 tests/data/in/proquest2023071720-993578-gsd/mets.xml
+coverage.json

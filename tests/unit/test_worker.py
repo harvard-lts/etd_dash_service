@@ -1,4 +1,6 @@
 from etd.worker import Worker
+import pytest
+import datetime
 import requests
 import shutil
 import lxml.etree as ET
@@ -15,6 +17,18 @@ class MockDuplicateResponse:
 
 class MockNoDuplicateResponse:
     text = '[]'
+
+
+# create a directory if it does not exist
+def create_directory(dir):
+    if os.path.exists(dir) is False:
+        os.makedirs(dir)
+
+
+# delete directory if it exists
+def delete_directory(dir):
+    if os.path.exists(dir) is True:
+        os.rmdir(dir)
 
 
 class TestWorkerClass():
@@ -172,62 +186,58 @@ class TestWorkerClass():
         srcDir = "./tests/data/in/testDir"
         destDir = "./tests/data/out/testDir"
         # make sure outputDir does not exist
-        if os.path.exists(destDir):
-            os.rmdir(destDir)
-        # create srcDir
-        if os.path.exists(srcDir) is False:
-            os.mkdir(srcDir)
-        assert os.path.isdir(srcDir) is True
-        assert os.path.isdir(destDir) is False
+        delete_directory(destDir)
+        create_directory(srcDir)
+
         worker = Worker()
+        worker.rename_directory(srcDir, destDir)
+
+        assert os.path.isdir(srcDir) is False
+        assert os.path.isdir(destDir) is True
+        # cleanup input and output dirs
+        delete_directory(srcDir)
+        delete_directory(destDir)
+
+    def test_rename_directory_with_timestamp_success(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
+        worker = Worker()
+        timestamp = worker.get_timestamp()
+        destDir = destDir + "_" + timestamp
+        # make sure outputDir does not exist
+        delete_directory(destDir)
+        create_directory(srcDir)
+
         worker.rename_directory(srcDir, destDir)
         assert os.path.isdir(srcDir) is False
         assert os.path.isdir(destDir) is True
         # cleanup input and output dirs
-        if os.path.exists(srcDir):
-            os.rmdir(srcDir)
-        if os.path.exists(destDir):
-            os.rmdir(destDir)
+        delete_directory(srcDir)
+        delete_directory(destDir)
 
     # test rename_directory function failure.
     # failure occurs when src_dir does not exist
     def test_rename_directory_failure_src_not_exists(self):
         srcDir = "./tests/data/in/random_dir_name"
         destDir = "./tests/data/out/testDir"
-        if os.path.exists(srcDir):
-            os.rmdir(srcDir)
-        if os.path.exists(destDir):
-            os.rmdir(destDir)
-        assert os.path.exists(srcDir) is False
-        assert os.path.exists(destDir) is False
+        delete_directory(srcDir)
+        delete_directory(destDir)
         worker = Worker()
-        try:
+
+        with pytest.raises(FileNotFoundError):
             worker.rename_directory(srcDir, destDir)
-            # exception should have been thrown, but wasn't
-            assert False
-        except Exception as e:
-            assert "No such file or directory" in str(e)
 
     # test rename_directory function failure.
     # failure occurs when dest_dir already exists
     def test_rename_directory_failure_dest_exists(self):
         srcDir = "./tests/data/in/testDir"
         destDir = "./tests/data/out/testDir"
-        # create srcDir
-        if os.path.exists(srcDir) is False:
-            os.makedirs(srcDir)
-        # create destDir
-        if os.path.exists(destDir) is False:
-            os.makedirs(destDir)
-        assert os.path.exists(srcDir) is True
-        assert os.path.exists(destDir) is True
+        create_directory(srcDir)
+        create_directory(destDir)
         worker = Worker()
-        try:
+
+        with pytest.raises(FileExistsError):
             worker.rename_directory(srcDir, destDir)
-        except Exception as e:
-            assert "Destination directory " + destDir + " exists" in str(e)
         # cleanup input and output dirs
-        if os.path.exists(srcDir):
-            os.rmdir(srcDir)
-        if os.path.exists(destDir):
-            os.rmdir(destDir)
+        delete_directory(srcDir)
+        delete_directory(destDir)
