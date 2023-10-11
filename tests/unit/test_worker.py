@@ -1,6 +1,5 @@
 from etd.worker import Worker
 import pytest
-import datetime
 import requests
 import shutil
 import lxml.etree as ET
