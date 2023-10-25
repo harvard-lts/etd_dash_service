@@ -1,4 +1,5 @@
 from etd.worker import Worker
+import pytest
 import requests
 import shutil
 import lxml.etree as ET
@@ -15,6 +16,18 @@ class MockDuplicateResponse:
 
 class MockNoDuplicateResponse:
     text = '[]'
+
+
+# create a directory if it does not exist
+def create_directory(dir):
+    if os.path.exists(dir) is False:
+        os.makedirs(dir)
+
+
+# delete directory if it exists
+def delete_directory(dir):
+    if os.path.exists(dir) is True:
+        os.rmdir(dir)
 
 
 class TestWorkerClass():
@@ -166,3 +179,64 @@ class TestWorkerClass():
         # since we are mocking a post response with []
         # we expect that duplicate is false (b/c expected resp is empty [])
         assert msg is False
+
+    # test Worker Class rename_directory function
+    def test_rename_directory_success(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
+        # make sure outputDir does not exist
+        delete_directory(destDir)
+        create_directory(srcDir)
+
+        worker = Worker()
+        worker.rename_directory(srcDir, destDir)
+
+        assert os.path.isdir(srcDir) is False
+        assert os.path.isdir(destDir) is True
+        # cleanup input and output dirs
+        delete_directory(srcDir)
+        delete_directory(destDir)
+
+    def test_rename_directory_with_timestamp_success(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
+        worker = Worker()
+        timestamp = worker.get_timestamp()
+        destDir = destDir + "_" + timestamp
+        # make sure outputDir does not exist
+        delete_directory(destDir)
+        create_directory(srcDir)
+
+        worker.rename_directory(srcDir, destDir)
+        assert os.path.isdir(srcDir) is False
+        assert os.path.isdir(destDir) is True
+        # cleanup input and output dirs
+        delete_directory(srcDir)
+        delete_directory(destDir)
+
+    # test rename_directory function failure.
+    # failure occurs when src_dir does not exist
+    def test_rename_directory_failure_src_not_exists(self):
+        srcDir = "./tests/data/in/random_dir_name"
+        destDir = "./tests/data/out/testDir"
+        delete_directory(srcDir)
+        delete_directory(destDir)
+        worker = Worker()
+
+        with pytest.raises(FileNotFoundError):
+            worker.rename_directory(srcDir, destDir)
+
+    # test rename_directory function failure.
+    # failure occurs when dest_dir already exists
+    def test_rename_directory_failure_dest_exists(self):
+        srcDir = "./tests/data/in/testDir"
+        destDir = "./tests/data/out/testDir"
+        create_directory(srcDir)
+        create_directory(destDir)
+        worker = Worker()
+
+        with pytest.raises(FileExistsError):
+            worker.rename_directory(srcDir, destDir)
+        # cleanup input and output dirs
+        delete_directory(srcDir)
+        delete_directory(destDir)

@@ -189,6 +189,12 @@ class Worker():
             if self.check_for_duplicates(identifier):
                 self.logger.error(f'{identifier} is a duplicate')
                 notifyJM.log('fail', f'{identifier} is a duplicate')
+                # form the dupe directory for the aip
+                dupe_dir = aipDir.replace('/in/', '/dupe/')
+                # append timestamp to the dupe_dir
+                dupe_dir = dupe_dir + "_" + self.get_timestamp()
+                # move the aip to the dupe_dir
+                self.rename_directory(aipDir, dupe_dir)
                 continue
             collection_handle = instance_data[schoolCode]['handle']
             dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
@@ -708,3 +714,18 @@ class Worker():
             return False
         else:
             return True
+
+    # rename a directory and throw exception if it fails.
+    # this will create directories as needed.
+    def rename_directory(self, src_dir, dest_dir):
+        if os.path.exists(dest_dir):
+            raise FileExistsError(f"Destination directory {dest_dir} exists")
+        try:
+            os.renames(src_dir, dest_dir)
+        except Exception as e:
+            raise e
+
+    # return a timestamp as a string
+    def get_timestamp(self):
+        now = datetime.now()
+        return now.strftime('%Y%m%d%H%M%S')
