@@ -237,7 +237,7 @@ class Worker():
                                    dashImportFile])
                 # convert result to string and log it
                 resultStr = str(result.stdout, 'utf-8')
-                self.logger.info(f"DSpace result: {resultStr}")
+                self.logger.debug(f"DSpace result: {resultStr}")
 
                 if result.returncode == 0:
                     notifyJM.log('pass', f"Imported {aipDir}/\
