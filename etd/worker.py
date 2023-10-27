@@ -235,6 +235,10 @@ class Worker():
                                    '-e', 'hl_dash_admin@harvard.edu',
                                    '-p', collection_handle,
                                    dashImportFile])
+                # convert result to string and log it
+                resultStr = str(result.stdout, 'utf-8')
+                self.logger.debug(f"DSpace result: {resultStr}")
+
                 if result.returncode == 0:
                     notifyJM.log('pass', f"Imported {aipDir}/\
                                 {aipFile} to DSpace")
@@ -242,7 +246,7 @@ class Worker():
                                     {aipFile} to DSpace")
                     handle = self.get_handle(str(result.stdout, 'utf-8'))
                     sub2handle[sub_id] = handle
-                    self.logger.info(f'{sub_id} {handle} {mapfile}')
+                    print(f'{sub_id} {handle}', file=mapfile)
                 else:
                     message = f"DSpace import failed \
                         for {aipDir}/{aipFile}.\n"
