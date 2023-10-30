@@ -193,9 +193,19 @@ class Worker():
                 dupe_dir = aipDir.replace('/in/', '/dupe/')
                 # append timestamp to the dupe_dir
                 dupe_dir = dupe_dir + "_" + self.get_timestamp()
-                # move the aip to the dupe_dir
-                self.rename_directory(aipDir, dupe_dir)
-                continue
+                # move the aip to the dupe_dir, catch exception
+                try:
+                    self.rename_directory(aipDir, dupe_dir)
+                except Exception as e:
+                    self.logger.error(f'Failed to move \
+                                        {aipDir} to {dupe_dir}: {e}')
+                # delete empty output directory, catch exception
+                try:
+                    os.rmdir(proquestOutDir)
+                except Exception as e:
+                    self.logger.error(f'Failed to remove \
+                                        {proquestOutDir}: {e}')
+                    continue
             collection_handle = instance_data[schoolCode]['handle']
             dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
 
