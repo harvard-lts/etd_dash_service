@@ -11,7 +11,7 @@ app1.config_from_object('celeryconfig')
 
 arguments = {"job_ticket_id": job_ticket_id, "feature_flags": {
             'dash_feature_flag': "on",
-            'alma_feature_flag': "off",
+            'alma_feature_flag': "on",
             'send_to_drs_feature_flag': "off",
             'drs_holding_record_feature_flag': "off"}}
 
