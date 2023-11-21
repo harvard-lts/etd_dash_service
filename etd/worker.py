@@ -71,7 +71,7 @@ class Worker():
     def get_version(self):
         return self.version
 
-    @tracer.start_as_current_span("send_to_dash_worker")
+    @tracer.start_as_current_span("DASH SERVICE - send_to_dash_worker")
     def send_to_dash(self, message):  # pragma: no cover
         global notifyJM
         # now = datetime.now()

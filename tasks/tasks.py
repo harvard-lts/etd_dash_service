@@ -84,7 +84,7 @@ app.steps["worker"].add(LivenessProbe)
 
 @app.task(serializer='json', name='etd-dash-service.tasks.send_to_dash')
 def send_to_dash(json_message):
-    with tracer.start_as_current_span("DASH SERVICE - send_to_dash_task") \
+    with tracer.start_as_current_span("Initialized Pipeline") \
             as current_span:
         logger.info("message")
         logger.info(json_message)
