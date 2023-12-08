@@ -4,6 +4,7 @@ import requests
 import shutil
 import lxml.etree as ET
 import os
+import zipfile
 
 
 class MockResponse:
@@ -240,3 +241,28 @@ class TestWorkerClass():
         # cleanup input and output dirs
         delete_directory(srcDir)
         delete_directory(destDir)
+
+    def test_unzip(self):
+        aipDir = "./tests/data/ziptest"
+        outDir = "./tests/data/ziptest/out"
+        create_directory(outDir)
+        aipFile = "test.zip"
+        aipPath = os.path.join(aipDir, aipFile)
+        outPath = os.path.join(outDir, aipFile)
+        shutil.copy(aipPath, outPath)
+        os.chdir(outDir)
+
+        worker = Worker()
+        worker.sh(['/usr/bin/unzip', aipFile])
+
+        # with zipfile.ZipFile(aipFile, 'r') as zip_ref:
+        #    zip_ref.extractall(".")
+
+        assert os.path.isfile("mets.xml")
+
+        homeDir = os.path.expanduser("~")
+        assert homeDir == "/home/etdadm"
+        os.chdir(homeDir)
+        # assert os.path.isdir(outDir) is True
+        # cleanup outDir and files
+        # shutil.rmtree(outDir)
