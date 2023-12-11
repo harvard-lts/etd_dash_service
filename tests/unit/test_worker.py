@@ -4,7 +4,6 @@ import requests
 import shutil
 import lxml.etree as ET
 import os
-import zipfile
 
 
 class MockResponse:
@@ -255,14 +254,19 @@ class TestWorkerClass():
         worker = Worker()
         worker.sh(['/usr/bin/unzip', aipFile])
 
-        # with zipfile.ZipFile(aipFile, 'r') as zip_ref:
-        #    zip_ref.extractall(".")
+        metsTitle = ("Bridging the Divide — Policy Prospects for Addressing "
+                     "Regional Disparities in Affordable Housing Funding "
+                     "Under the Massachusetts Community Preservation Act "
+                     "(May 2023).pdf")
 
+        titleStartswith = "Bridging"
+        file_list = os.listdir(".")
+        matching_files = [filename for filename in file_list if
+                          filename.startswith(titleStartswith)]
+        assert matching_files[0] == metsTitle
         assert os.path.isfile("mets.xml")
 
         homeDir = os.path.expanduser("~")
-        assert homeDir == "/home/etdadm"
         os.chdir(homeDir)
-        # assert os.path.isdir(outDir) is True
         # cleanup outDir and files
-        # shutil.rmtree(outDir)
+        shutil.rmtree(outDir)
