@@ -125,6 +125,7 @@ def send_to_dash(json_message):
             return new_message
 
         current_span.add_event("to next queue")  # pragma: no cover, unit tests end before this span # noqa: E501
+        logger.debug("to next queue")
         app.send_task("etd-alma-service.tasks.send_to_alma",
                       args=[new_message], kwargs={},
                       queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, unit tests should not progress the message # noqa: E501
