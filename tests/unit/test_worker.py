@@ -254,7 +254,7 @@ class TestWorkerClass():
 
         # unzip the zip and test the title of the pdf
         worker = Worker()
-        worker.sh(['/usr/bin/unzip', aipFile])
+        worker.sh(['unzip', aipFile])
 
         metsTitle = ("Bridging the Divide — Policy Prospects for Addressing "
                      "Regional Disparities in Affordable Housing Funding "
@@ -271,7 +271,7 @@ class TestWorkerClass():
         os.remove(aipFile)
 
         # zip again to confirm zipping works
-        zipWithArgs = ['/usr/bin/zip', aipFile]
+        zipWithArgs = ['zip', aipFile]
         for file in os.listdir('.'):
             zipWithArgs.append(file)
         worker.sh(zipWithArgs)
@@ -282,7 +282,7 @@ class TestWorkerClass():
          os.path.isfile(f) and not f.endswith(".zip")]
 
         # unzip a second time to confirm title is still correct
-        worker.sh(['/usr/bin/unzip', aipFile])
+        worker.sh(['unzip', aipFile])
         titleStartswith = "Bridging"
         file_list = os.listdir(".")
         matching_files = [filename for filename in file_list if
