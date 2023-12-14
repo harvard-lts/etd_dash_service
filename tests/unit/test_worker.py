@@ -4,6 +4,7 @@ import requests
 import shutil
 import lxml.etree as ET
 import os
+import glob
 
 
 class MockResponse:
@@ -251,6 +252,7 @@ class TestWorkerClass():
         shutil.copy(aipPath, outPath)
         os.chdir(outDir)
 
+        # unzip the zip and test the title of the pdf
         worker = Worker()
         worker.sh(['/usr/bin/unzip', aipFile])
 
@@ -263,6 +265,29 @@ class TestWorkerClass():
         file_list = os.listdir(".")
         matching_files = [filename for filename in file_list if
                           filename.startswith(titleStartswith)]
+
+        assert matching_files[0] == metsTitle
+
+        os.remove(aipFile)
+
+        # zip again to confirm zipping works
+        zipWithArgs = ['/usr/bin/zip', aipFile]
+        for file in os.listdir('.'):
+            zipWithArgs.append(file)
+        worker.sh(zipWithArgs)
+
+        assert os.path.exists(aipFile) is True
+
+        [os.remove(f) for f in glob.glob("*") if
+         os.path.isfile(f) and not f.endswith(".zip")]
+
+        # unzip a second time to confirm title is still correct
+        worker.sh(['/usr/bin/unzip', aipFile])
+        titleStartswith = "Bridging"
+        file_list = os.listdir(".")
+        matching_files = [filename for filename in file_list if
+                          filename.startswith(titleStartswith)]
+
         assert matching_files[0] == metsTitle
 
         homeDir = os.path.expanduser("~")
