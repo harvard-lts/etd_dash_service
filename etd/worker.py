@@ -17,7 +17,7 @@ import lxml.etree as xmlTree
 import re
 from datetime import datetime
 from subprocess import run, PIPE
-import zipfile
+# import zipfile
 # from glob import glob
 from shlex import quote
 from .xfer_files import xfer_files
@@ -121,15 +121,11 @@ class Worker():
                 continue
 
             # Unpack AIP package
-            # proc = self.sh(['unzip', aipFile])
-            # if proc.returncode > 0:
-                # notifyJM.log('fail', f"Failed to
-                # unzip {aipDir}/{aipFile}", verbose)
-            #     self.logger.error(f"Failed to unzip {aipDir}/{aipFile}")
-            #    continue
-
-            with zipfile.ZipFile(aipFile, 'r') as zip_ref:
-                zip_ref.extractall(".")
+            proc = self.sh(['unzip', aipFile])
+            if proc.returncode > 0:
+                notifyJM.log('fail', f"Failed to unzip {aipDir}/{aipFile}")
+                self.logger.error(f"Failed to unzip {aipDir}/{aipFile}")
+                continue
 
             os.remove(aipFile)
 
@@ -145,27 +141,16 @@ class Worker():
                                            message["identifier"])
 
             # Zip package back up with updated mets file
-            try:
-                # proc = run(['zip', '-r', aipFile, aipDir])
-                current_directory = os.getcwd()
-                with zipfile.ZipFile(aipFile, 'w',
-                                     zipfile.ZIP_DEFLATED) as zipf:
-                    for root, dirs, files in os.walk(current_directory):
-                        for file in files:
-                            if file != aipFile:
-                                file_path = os.path.join(root, file)
-                                zipf.write(file_path, arcname=os.path.
-                                           relpath(file_path,
-                                                   current_directory))
-            except Exception as e:
-                self.logger.error(e)
-                self.logger.error(f"The zip command \
-                                  failed in {aipDir}")
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event(f"The zip command \
-                                  failed in {aipDir}")
-                current_span.record_exception(e)
-                notifyJM.log('fail', f"The zip command failed in {aipDir}")
+            zipWithArgs = ['zip', aipFile]
+            for file in os.listdir('.'):
+                zipWithArgs.append(file)
+            proc = self.sh(zipWithArgs)
+            if proc.returncode > 0:
+                notifyJM.log('fail', f"The command {zipWithArgs} \
+                            failed in {aipDir}")
+                self.logger.info('fail', f"The command {zipWithArgs} \
+                            failed in {aipDir}")
+                continue
 
             proquestOutDir = aipDir.replace('/in/', '/out/')
             if not os.path.isdir(proquestOutDir):

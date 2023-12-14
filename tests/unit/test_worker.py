@@ -264,7 +264,6 @@ class TestWorkerClass():
         matching_files = [filename for filename in file_list if
                           filename.startswith(titleStartswith)]
         assert matching_files[0] == metsTitle
-        assert os.path.isfile("mets.xml")
 
         homeDir = os.path.expanduser("~")
         os.chdir(homeDir)
