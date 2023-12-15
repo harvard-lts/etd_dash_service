@@ -13,3 +13,9 @@ dir_int_out = "tests/integration/out/"
 
 [tool.setuptools]
 packages = ["etd"]
+
+[tool.coverage.run]
+omit = [
+    # omit everything in tests/unit
+    "*/tests/unit/*"
+    ]
