@@ -749,7 +749,13 @@ class Worker():
 
             # create dupe directory if needed
             if not xfer.isdir(f'dupe/{schoolCode}'):
-                xfer.makedirs(f'dupe/{schoolCode}')
+                try:
+                    xfer.makedirs(f'dupe/{schoolCode}')
+                except Exception as e:
+                    log_msg = f'Failed to create dupe/{schoolCode}: {e}'
+                    notifyJM.log('fail', log_msg)
+                    self.logger.error(log_msg)
+                    return
 
             # move the file to the dupe directory
             dupe_file = schoolFile.replace(".",
