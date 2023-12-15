@@ -294,4 +294,4 @@ class TestWorkerClass():
         os.chdir(homeDir)
         # cleanup outDir and files
         if os.path.exists(outDir):  # pragma: no-cover
-            shutil.rmtree(outDir)
+            shutil.rmtree(outDir)  # pragma: no-cover
