@@ -415,15 +415,15 @@ class Worker():
                     try:
                         xfer.rename(f'incoming/{schoolCode}/{schoolFile}',
                                     f'archives/{schoolCode}/{schoolFile}')
-                        if xfer.error:
-                            notifyJM.log('fail', xfer.error)
-                            self.logger.error(xfer.error)
+                        self.move_to_archives_dir(xfer, schoolCode, schoolFile,
+                                                  dropboxServer, notifyJM)
                     except Exception as e:
-                        notifyJM.log('fail', f'Fail to archive \
-                        {dropboxServer}:incoming/{schoolCode}/{schoolFile}')
-                        self.logger.error(f'Fail to archive {dropboxServer}: \
-                                          incoming/{schoolCode}/{schoolFile}: \
-                                          {e}')
+                        log_msg = (
+                            f'Failed to archive {dropboxServer}:'
+                            f'incoming/{schoolCode}/{schoolFile}: {e}'
+                        )
+                        notifyJM.log('fail', log_msg)
+                        self.logger.error(log_msg)
                         current_span.set_status(Status(StatusCode.ERROR))
                         current_span.add_event(f'Fail to archive \
                                           {dropboxServer}: \
@@ -729,3 +729,34 @@ class Worker():
     def get_timestamp(self):
         now = datetime.now()
         return now.strftime('%Y%m%d%H%M%S')
+
+    # move deposit to archives directory
+    def move_to_archives_dir(self, xfer, schoolCode, schoolFile,
+                             dropboxServer, notifyJM):
+        incoming_path = f'incoming/{schoolCode}/{schoolFile}'
+        archives_path = f'archives/{schoolCode}/{schoolFile}'
+
+        log_msg = f'Moving {schoolFile} to {archives_path}'
+        notifyJM.log('info', log_msg)
+        self.logger.info(log_msg)
+
+        if not xfer.isfile(archives_path):
+            xfer.rename(incoming_path, archives_path)
+        else:
+            log_msg = f'File {schoolFile} already exists in {archives_path}.'
+            notifyJM.log('warn', log_msg)
+            self.logger.warn(log_msg)
+
+            # create dupe directory if needed
+            if not xfer.isdir(f'dupe/{schoolCode}'):
+                xfer.makedirs(f'dupe/{schoolCode}')
+
+            # move the file to the dupe directory
+            dupe_file = schoolFile.replace(".",
+                                           "_" + self.get_timestamp() + ".")
+            dupe_path = f'dupe/{schoolCode}/{dupe_file}'
+
+            log_msg = f'Moving {schoolFile} to {dupe_path}'
+            notifyJM.log('info', log_msg)
+            self.logger.info(log_msg)
+            xfer.rename(incoming_path, dupe_path)
