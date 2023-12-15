@@ -293,4 +293,5 @@ class TestWorkerClass():
         homeDir = os.path.expanduser("~")
         os.chdir(homeDir)
         # cleanup outDir and files
-        shutil.rmtree(outDir)
+        if os.path.exists(outDir):
+            shutil.rmtree(outDir)
