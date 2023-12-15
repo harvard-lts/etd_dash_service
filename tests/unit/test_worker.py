@@ -4,6 +4,7 @@ import requests
 import shutil
 import lxml.etree as ET
 import os
+import glob
 
 
 class MockResponse:
@@ -240,3 +241,57 @@ class TestWorkerClass():
         # cleanup input and output dirs
         delete_directory(srcDir)
         delete_directory(destDir)
+
+    def test_unzip(self):
+        aipDir = "./tests/data/ziptest"
+        outDir = "./tests/data/ziptest/out"
+        create_directory(outDir)
+        aipFile = "test.zip"
+        aipPath = os.path.join(aipDir, aipFile)
+        outPath = os.path.join(outDir, aipFile)
+        shutil.copy(aipPath, outPath)
+        os.chdir(outDir)
+
+        # unzip the zip and test the title of the pdf
+        worker = Worker()
+        worker.sh(['unzip', aipFile])
+
+        metsTitle = ("Bridging the Divide — Policy Prospects for Addressing "
+                     "Regional Disparities in Affordable Housing Funding "
+                     "Under the Massachusetts Community Preservation Act "
+                     "(May 2023).pdf")
+
+        titleStartswith = "Bridging"
+        file_list = os.listdir(".")
+        matching_files = [filename for filename in file_list if
+                          filename.startswith(titleStartswith)]
+
+        assert matching_files[0] == metsTitle
+
+        os.remove(aipFile)
+
+        # zip again to confirm zipping works
+        zipWithArgs = ['zip', aipFile]
+        for file in os.listdir('.'):
+            zipWithArgs.append(file)
+        worker.sh(zipWithArgs)
+
+        assert os.path.exists(aipFile) is True
+
+        [os.remove(f) for f in glob.glob("*") if
+         os.path.isfile(f) and not f.endswith(".zip")]
+
+        # unzip a second time to confirm title is still correct
+        worker.sh(['unzip', aipFile])
+        titleStartswith = "Bridging"
+        file_list = os.listdir(".")
+        matching_files = [filename for filename in file_list if
+                          filename.startswith(titleStartswith)]
+
+        assert matching_files[0] == metsTitle
+
+        homeDir = os.path.expanduser("~")
+        os.chdir(homeDir)
+        # cleanup outDir and files
+        if os.path.exists(outDir):
+            shutil.rmtree(outDir)
