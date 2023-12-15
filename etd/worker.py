@@ -261,6 +261,7 @@ class Worker():
             # handles = set(sub2handle.values())
 
             # run citation-update curation task
+
             result = self.ssh([self.DSPACE_COMMAND, 'curate', '-t',
                               'citation-update', '-i', collection_handle])
             if result.returncode == 0:
