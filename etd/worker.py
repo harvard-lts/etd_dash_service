@@ -413,8 +413,6 @@ class Worker():
                         continue
 
                     try:
-                        xfer.rename(f'incoming/{schoolCode}/{schoolFile}',
-                                    f'archives/{schoolCode}/{schoolFile}')
                         self.move_to_archives_dir(xfer, schoolCode, schoolFile,
                                                   dropboxServer, notifyJM)
                     except Exception as e:
@@ -749,13 +747,7 @@ class Worker():
 
             # create dupe directory if needed
             if not xfer.isdir(f'dupe/{schoolCode}'):
-                try:
-                    xfer.makedirs(f'dupe/{schoolCode}')
-                except Exception as e:
-                    log_msg = f'Failed to create dupe/{schoolCode}: {e}'
-                    notifyJM.log('fail', log_msg)
-                    self.logger.error(log_msg)
-                    return
+                xfer.makedirs(f'dupe/{schoolCode}')
 
             # move the file to the dupe directory
             dupe_file = schoolFile.replace(".",
