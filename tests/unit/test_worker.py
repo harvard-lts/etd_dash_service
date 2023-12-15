@@ -394,4 +394,4 @@ class TestWorkerClass():
 
         assert xfer.exists
         assert info_logs == [expected_info_log, expected_info_log_dupe]
-        assert warn_logs == [expected_warn_log]            
+        assert warn_logs == [expected_warn_log]
