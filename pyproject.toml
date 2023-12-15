@@ -3,7 +3,7 @@ name = "etd_dash_service"
 version = "0.0.1"
 
 [tool.pytest.ini_options]
-addopts = ["--ignore=tests/unit/test_worker.py]
+addopts = ["--ignore=tests/unit/test_worker.py"]
 pythonpath = [
   ".", "etd"
 ]
