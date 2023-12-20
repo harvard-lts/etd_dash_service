@@ -5,6 +5,7 @@ import shutil
 import lxml.etree as ET
 import os
 import glob
+from lib.notify import notify
 
 
 class MockResponse:
@@ -17,6 +18,31 @@ class MockDuplicateResponse:
 
 class MockNoDuplicateResponse:
     text = '[]'
+
+
+class MockXfer:
+    def __init__(self, exists=True):
+        self.exists = exists
+
+    def rename(self, src, dest):
+        pass
+
+    def isfile(self, path):
+        return self.exists
+
+    def isdir(self, path):
+        pass
+
+    def makedirs(self, path):
+        pass
+
+
+class MockLogger:
+    def info(self, msg):
+        pass  # pragma: no cover
+
+    def warn(self, msg):
+        pass  # pragma: no cover
 
 
 # create a directory if it does not exist
@@ -295,3 +321,77 @@ class TestWorkerClass():
         # cleanup outDir and files
         if os.path.exists(outDir):
             shutil.rmtree(outDir)
+
+    def test_move_to_archives_dir_file_not_exists(self, monkeypatch):
+        worker = Worker()
+        xfer = MockXfer(exists=False)
+        notifyJM = notify('monitor', 'proquest2dash_test', None)
+        monkeypatch.setattr(worker, "logger", MockLogger())
+        monkeypatch.setattr(worker, "get_timestamp", lambda: "timestamp")
+
+        schoolCode = "gsd"
+        schoolFile = "submission_993578.zip"
+        dropboxServer = "dropbox_server"
+
+        archives_path = f"archives/{schoolCode}/{schoolFile}"
+
+        expected_info_log = f"Moving {schoolFile} to {archives_path}"
+
+        info_logs = []
+        warn_logs = []
+
+        def mock_info_log(msg):
+            info_logs.append(msg)
+
+        def mock_warn_log(msg):
+            warn_logs.append(msg)  # pragma: no cover
+
+        monkeypatch.setattr(worker.logger, "info", mock_info_log)
+        monkeypatch.setattr(worker.logger, "warn", mock_warn_log)
+
+        worker.move_to_archives_dir(xfer, schoolCode, schoolFile,
+                                    dropboxServer, notifyJM)
+
+        assert not xfer.exists
+        assert info_logs == [expected_info_log]
+        assert warn_logs == []
+
+    def test_move_to_archives_dir_file_exists(self, monkeypatch):
+        worker = Worker()
+        xfer = MockXfer(exists=True)
+        notifyJM = notify('monitor', 'proquest2dash_test', None)
+        monkeypatch.setattr(worker, "logger", MockLogger())
+        monkeypatch.setattr(worker, "get_timestamp", lambda: "timestamp")
+
+        schoolCode = "gsd"
+        schoolFile = "submission_993578.zip"
+        dropboxServer = "dropbox_server"
+
+        archives_path = f"archives/{schoolCode}/{schoolFile}"
+        expected_dupe_file = schoolFile.replace(".", "_timestamp.")
+        expected_dupe_path = f"dupe/{schoolCode}/{expected_dupe_file}"
+
+        expected_info_log = f"Moving {schoolFile} to {archives_path}"
+        expected_warn_log = (
+            f"File {schoolFile} already exists in {archives_path}."
+        )
+        expected_info_log_dupe = f"Moving {schoolFile} to {expected_dupe_path}"
+
+        info_logs = []
+        warn_logs = []
+
+        def mock_info_log(msg):
+            info_logs.append(msg)
+
+        def mock_warn_log(msg):
+            warn_logs.append(msg)
+
+        monkeypatch.setattr(worker.logger, "info", mock_info_log)
+        monkeypatch.setattr(worker.logger, "warn", mock_warn_log)
+
+        worker.move_to_archives_dir(xfer, schoolCode, schoolFile,
+                                    dropboxServer, notifyJM)
+
+        assert xfer.exists
+        assert info_logs == [expected_info_log, expected_info_log_dupe]
+        assert warn_logs == [expected_warn_log]
