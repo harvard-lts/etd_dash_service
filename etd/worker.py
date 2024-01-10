@@ -491,7 +491,9 @@ class Worker():
 
                 elif dimField.attrib['element'] == 'subject':
                     try:
-                        if dimField.attrib['qualifier'] == 'PQ':
+                        # if dimField.attrib['qualifier'] exists, log it
+                        if 'qualifier' in dimField.attrib and \
+                                dimField.attrib['qualifier'] == 'PQ':
                             dimField.attrib.pop('qualifier')
                     except Exception as e:
                         self.logger.info(e)
