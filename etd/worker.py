@@ -190,7 +190,8 @@ class Worker():
                 except Exception as e:
                     self.logger.error(f'Failed to remove \
                                         {proquestOutDir}: {e}')
-                    continue
+                continue
+
             collection_handle = instance_data[schoolCode]['handle']
             dashImportFile = f'{self.dspaceImportDir}/proquest/' + aipFile
 
@@ -220,6 +221,13 @@ class Worker():
 
             # Import to DASH
             sub2handle = {}  # we keep mapfile as an on-disk record
+            # check that proquestOutDir exists
+            if not os.path.isdir(proquestOutDir):
+                notifyJM.log('fail', f'{proquestOutDir} does not exist')
+                self.logger.error(f'{proquestOutDir} does not exist')
+                current_span.add_event(f'{proquestOutDir} does not exist')
+                continue
+
             with open(os.path.join(proquestOutDir,
                                    "mapfile"), 'w') as mapfile:
 
