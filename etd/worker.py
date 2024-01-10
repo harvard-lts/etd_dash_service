@@ -52,7 +52,7 @@ class Worker():
     logger = logging.getLogger('etd_dash')
     aipPattern = '.+_(\\d+).zip'
     reAipPackage = re.compile(aipPattern)
-    datePattern = '\\d{5}(-\\d\\d-\\d\\d)'
+    datePattern = '\\d{4}(-\\d\\d-\\d\\d)'
     re5digitDate = re.compile(datePattern)
     dspaceHome = "/home/dspace"
     DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
