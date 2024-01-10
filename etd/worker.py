@@ -53,7 +53,7 @@ class Worker():
     aipPattern = '.+_(\\d+).zip'
     reAipPackage = re.compile(aipPattern)
     datePattern = '\\d{4}(-\\d\\d-\\d\\d)'
-    re5digitDate = re.compile(datePattern)
+    re4digitDate = re.compile(datePattern)
     dspaceHome = "/home/dspace"
     DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
     dspaceImportDir = f'{dspaceHome}/import'
@@ -581,7 +581,7 @@ class Worker():
                     try:
                         if (dimField.attrib['qualifier'] == 'terms' or
                                 dimField.attrib['qualifier'] == 'until'):
-                            match = self.re5digitDate.match(dimField.text)
+                            match = self.re4digitDate.match(dimField.text)
                             if match:
 
                                 # These do not go to Dash
@@ -654,7 +654,7 @@ class Worker():
                 rootMets.iter(f'{self.rightsNamespace}Context'):
             try:
                 match = \
-                    self.re5digitDate.match(rightsContext.attrib['start-date'])
+                    self.re4digitDate.match(rightsContext.attrib['start-date'])
                 if match:  # pragma: no cover # noqa: E501
                     rightsContext.attrib['start-date'] = \
                         f'9999{match.group(1)}'
