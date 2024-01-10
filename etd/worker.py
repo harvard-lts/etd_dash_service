@@ -490,15 +490,11 @@ class Worker():
                         dimField.attrib['qualifier'] = 'created'
 
                 elif dimField.attrib['element'] == 'subject':
-                    try:
-                        # if dimField.attrib['qualifier'] exists, log it
-                        if 'qualifier' in dimField.attrib and \
-                                dimField.attrib['qualifier'] == 'PQ':
-                            dimField.attrib.pop('qualifier')
-                    except Exception as e:
-                        self.logger.info(e)
-                        current_span.record_exception(e)
-                        continue
+                    # if dimField.attrib['qualifier'] exists, and it's PQ,
+                    # remove it
+                    if 'qualifier' in dimField.attrib and \
+                            dimField.attrib['qualifier'] == 'PQ':
+                        dimField.attrib.pop('qualifier')
 
                 elif dimField.attrib['element'] == 'dc':
                     try:   # pragma: no cover
