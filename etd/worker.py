@@ -649,6 +649,7 @@ class Worker():
         for rightsContext in \
                 rootMets.iter(f'{self.rightsNamespace}Context'):
             try:
+                self.logger.debug(rightsContext)
                 match = \
                     self.re4digitDate.match(rightsContext.attrib['start-date'])
                 if match:  # pragma: no cover # noqa: E501
