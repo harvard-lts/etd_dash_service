@@ -130,8 +130,8 @@ class Worker():
             os.remove(aipFile)
 
             # Rewrite mets file remapping a few elements
-            if not self.rewrite_mets(aipDir, batch, schoolCode, message):
-                continue
+            sendToDash = self.rewrite_mets(aipDir, batch, schoolCode, message)
+            #    continue
 
             # get proquest identifier from json message
             identifier = None
@@ -171,6 +171,12 @@ class Worker():
                 self.logger.error(f'No proquest for {aipFile}')
                 notifyJM.log('fail', f'No proquest for {aipFile}')
                 continue
+
+            # Not sending to dash, print and empty mapfile
+            if not sendToDash:
+                open(os.path.join(proquestOutDir, "mapfile"), 'w').close()
+                continue
+
             if self.check_for_duplicates(identifier):
                 self.logger.error(f'{identifier} is a duplicate')
                 notifyJM.log('fail', f'{identifier} is a duplicate')
