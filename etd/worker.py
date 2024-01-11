@@ -52,7 +52,7 @@ class Worker():
     logger = logging.getLogger('etd_dash')
     aipPattern = '.+_(\\d+).zip'
     reAipPackage = re.compile(aipPattern)
-    datePattern = '\\d{4}(-\\d\\d-\\d\\d)'
+    datePattern = '\\d{5}(-\\d\\d-\\d\\d)'
     re4digitDate = re.compile(datePattern)
     dspaceHome = "/home/dspace"
     DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
@@ -580,7 +580,7 @@ class Worker():
                                 dimField.attrib['qualifier'] == 'until'):
                             match = self.re4digitDate.match(dimField.text)
                             if match:
-                                
+                                self.logger.debug("embargo date: " + dimField.text)
                                 # These do not go to Dash
                                 if (schoolCode == 'college' and
                                         dimField.attrib['qualifier'] ==
