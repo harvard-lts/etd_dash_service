@@ -650,11 +650,12 @@ class Worker():
         for rightsContext in \
                 rootMets.iter(f'{self.rightsNamespace}Context'):
             try:
-                match = \
-                    self.re4digitDate.match(rightsContext.attrib['start-date'])
-                if match:  # pragma: no cover # noqa: E501
-                    rightsContext.attrib['start-date'] = \
-                        f'9999{match.group(1)}'
+                if 'start-date' in rightsContext.attrib:
+                    match = \
+                        self.re4digitDate.match(rightsContext.attrib['start-date'])
+                    if match:  # pragma: no cover # noqa: E501
+                        rightsContext.attrib['start-date'] = \
+                            f'9999{match.group(1)}'
             except Exception as e:
                 self.logger.info(e)
                 current_span.record_exception(e)
