@@ -665,7 +665,7 @@ class Worker():
 
         # Replace any 5 digit year dates in right context
         for rightsContext in \
-                rootMets.iter(f'{self.rightsNamespace}Context'):
+                rootMets.iter(f'{self.rightsNamespace}Context'): # pragma: no cover # noqa: E501
             try:
                 if 'start-date' in rightsContext.attrib:
                     match = \
