@@ -575,11 +575,12 @@ class Worker():
                                      Embargo information found")
 
                     try:
+                        self.logger.debug("embargo date: " + dimField.text)
                         if (dimField.attrib['qualifier'] == 'terms' or
                                 dimField.attrib['qualifier'] == 'until'):
                             match = self.re4digitDate.match(dimField.text)
                             if match:
-
+                                
                                 # These do not go to Dash
                                 if (schoolCode == 'college' and
                                         dimField.attrib['qualifier'] ==
@@ -649,7 +650,6 @@ class Worker():
         for rightsContext in \
                 rootMets.iter(f'{self.rightsNamespace}Context'):
             try:
-                self.logger.debug(rightsContext)
                 match = \
                     self.re4digitDate.match(rightsContext.attrib['start-date'])
                 if match:  # pragma: no cover # noqa: E501
