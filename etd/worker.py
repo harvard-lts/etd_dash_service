@@ -53,7 +53,7 @@ class Worker():
     aipPattern = '.+_(\\d+).zip'
     reAipPackage = re.compile(aipPattern)
     datePattern = '\\d{5}(-\\d\\d-\\d\\d)'
-    re4digitDate = re.compile(datePattern)
+    re5digitDate = re.compile(datePattern)
     dspaceHome = "/home/dspace"
     DSPACE_COMMAND = f'{dspaceHome}/dspace/bin/dspace'
     dspaceImportDir = f'{dspaceHome}/import'
@@ -594,7 +594,7 @@ class Worker():
                         self.logger.debug("embargo date: " + dimField.text)
                         if (dimField.attrib['qualifier'] == 'terms' or
                                 dimField.attrib['qualifier'] == 'until'):
-                            match = self.re4digitDate.match(dimField.text)
+                            match = self.re5digitDate.match(dimField.text)
                             if match:
                                 self.logger.debug("embargo date: "
                                                   + dimField.text)
@@ -669,7 +669,7 @@ class Worker():
             try:
                 if 'start-date' in rightsContext.attrib:
                     match = \
-                        self.re4digitDate.match(
+                        self.re5digitDate.match(
                             rightsContext.attrib['start-date'])
                     if match:  # pragma: no cover # noqa: E501
                         rightsContext.attrib['start-date'] = \
