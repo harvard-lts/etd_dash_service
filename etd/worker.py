@@ -665,7 +665,8 @@ class Worker():
             try:
                 if 'start-date' in rightsContext.attrib:
                     match = \
-                        self.re4digitDate.match(rightsContext.attrib['start-date'])
+                        self.re4digitDate.match(
+                            rightsContext.attrib['start-date'])
                     if match:  # pragma: no cover # noqa: E501
                         rightsContext.attrib['start-date'] = \
                             f'9999{match.group(1)}'
