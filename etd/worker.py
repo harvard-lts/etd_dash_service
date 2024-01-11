@@ -130,7 +130,17 @@ class Worker():
             os.remove(aipFile)
 
             # Rewrite mets file remapping a few elements
-            if not self.rewrite_mets(aipDir, batch, schoolCode, message):
+            sendToDash = self.rewrite_mets(aipDir, batch, schoolCode, message)
+
+            # Skip the record entirely if we're not sending to dash
+            # Logic for non-DASH records needs to be implemented
+            if not sendToDash:
+                notifyJM.log('info',
+                             f"Skipping non-DASH record {aipDir}/{aipFile}")
+                current_span.add_event(
+                    f"Skipping non-DASH record {aipDir}/{aipFile}")
+                self.logger.info(
+                    f"Skipping non-DASH record {aipDir}/{aipFile}")
                 continue
 
             # get proquest identifier from json message
@@ -171,6 +181,12 @@ class Worker():
                 self.logger.error(f'No proquest for {aipFile}')
                 notifyJM.log('fail', f'No proquest for {aipFile}')
                 continue
+
+            # Not sending to dash, print and empty mapfile
+            if not sendToDash:
+                open(os.path.join(proquestOutDir, "mapfile"), 'w').close()
+                continue
+
             if self.check_for_duplicates(identifier):
                 self.logger.error(f'{identifier} is a duplicate')
                 notifyJM.log('fail', f'{identifier} is a duplicate')
@@ -490,13 +506,11 @@ class Worker():
                         dimField.attrib['qualifier'] = 'created'
 
                 elif dimField.attrib['element'] == 'subject':
-                    try:
-                        if dimField.attrib['qualifier'] == 'PQ':
-                            dimField.attrib.pop('qualifier')
-                    except Exception as e:
-                        self.logger.info(e)
-                        current_span.record_exception(e)
-                        continue
+                    # if dimField.attrib['qualifier'] exists, and it's PQ,
+                    # remove it
+                    if 'qualifier' in dimField.attrib and \
+                            dimField.attrib['qualifier'] == 'PQ':
+                        dimField.attrib.pop('qualifier')
 
                 elif dimField.attrib['element'] == 'dc':
                     try:   # pragma: no cover
@@ -577,11 +591,13 @@ class Worker():
                                      Embargo information found")
 
                     try:
+                        self.logger.debug("embargo date: " + dimField.text)
                         if (dimField.attrib['qualifier'] == 'terms' or
                                 dimField.attrib['qualifier'] == 'until'):
                             match = self.re5digitDate.match(dimField.text)
                             if match:
-
+                                self.logger.debug("embargo date: "
+                                                  + dimField.text)
                                 # These do not go to Dash
                                 if (schoolCode == 'college' and
                                         dimField.attrib['qualifier'] ==
@@ -649,13 +665,15 @@ class Worker():
 
         # Replace any 5 digit year dates in right context
         for rightsContext in \
-                rootMets.iter(f'{self.rightsNamespace}Context'):
+                rootMets.iter(f'{self.rightsNamespace}Context'):  # pragma: no cover # noqa: E501
             try:
-                match = \
-                    self.re5digitDate.match(rightsContext.attrib['start-date'])
-                if match:  # pragma: no cover # noqa: E501
-                    rightsContext.attrib['start-date'] = \
-                        f'9999{match.group(1)}'
+                if 'start-date' in rightsContext.attrib:
+                    match = \
+                        self.re5digitDate.match(
+                            rightsContext.attrib['start-date'])
+                    if match:  # pragma: no cover # noqa: E501
+                        rightsContext.attrib['start-date'] = \
+                            f'9999{match.group(1)}'
             except Exception as e:
                 self.logger.info(e)
                 current_span.record_exception(e)
