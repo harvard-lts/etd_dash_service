@@ -131,7 +131,14 @@ class Worker():
 
             # Rewrite mets file remapping a few elements
             sendToDash = self.rewrite_mets(aipDir, batch, schoolCode, message)
-            #    continue
+
+            # Skip the record entirely if we're not sending to dash
+            # Logic for non-DASH records needs to be implemented
+            if not sendToDash:
+                notifyJM.log('info', f"Skipping non-DASH record {aipDir}/{aipFile}")
+                current_span.add_event(f"Skipping non-DASH record {aipDir}/{aipFile}")
+                self.logger.info(f"Skipping non-DASH record {aipDir}/{aipFile}")
+                continue
 
             # get proquest identifier from json message
             identifier = None
