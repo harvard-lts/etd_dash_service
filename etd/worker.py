@@ -134,14 +134,14 @@ class Worker():
 
             # Skip the record entirely if we're not sending to dash
             # Logic for non-DASH records needs to be implemented
-            if not sendToDash:
-                notifyJM.log('info',
-                             f"Skipping non-DASH record {aipDir}/{aipFile}")
-                current_span.add_event(
-                    f"Skipping non-DASH record {aipDir}/{aipFile}")
-                self.logger.info(
-                    f"Skipping non-DASH record {aipDir}/{aipFile}")
-                continue
+            # if not sendToDash:
+            #     notifyJM.log('info',
+            #                  f"Skipping non-DASH record {aipDir}/{aipFile}")
+            #     current_span.add_event(
+            #         f"Skipping non-DASH record {aipDir}/{aipFile}")
+            #     self.logger.info(
+            #         f"Skipping non-DASH record {aipDir}/{aipFile}")
+            #     continue
 
             # get proquest identifier from json message
             identifier = None
@@ -184,6 +184,12 @@ class Worker():
 
             # Not sending to dash, print and empty mapfile
             if not sendToDash:
+                notifyJM.log('info',
+                             f"Skipping non-DASH record {aipDir}/{aipFile}")
+                current_span.add_event(
+                    f"Skipping non-DASH record {aipDir}/{aipFile}")
+                self.logger.info(
+                    f"Skipping non-DASH record {aipDir}/{aipFile}")
                 open(os.path.join(proquestOutDir, "mapfile"), 'w').close()
                 continue
 
