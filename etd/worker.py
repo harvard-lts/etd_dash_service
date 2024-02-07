@@ -78,6 +78,7 @@ class Worker():
         # dateTimeStamp = now.strftime('%Y%m%d%H')
         # dateTimeStamp = now.strftime('%Y%m%d%H')
         # logFile = os.path.join(logDir, f"{jobCode}_{dateTimeStamp}.log")
+        self.logger.info('Start send_to_dash')
         notifyJM = notify('monitor', self.jobCode, None)
         # Let the Job Monitor know that the job has started
         notifyJM.log('pass', 'Start Proquest to ETDs processing')
@@ -100,6 +101,7 @@ class Worker():
 
         current_span = trace.get_current_span()
         current_span.add_event("sending to dash")
+        self.logger.info('Sending to dash')
 
         # Process AIP files found
         for schoolCode, batch, aipFile in aipFiles:
