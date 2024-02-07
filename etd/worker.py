@@ -84,11 +84,13 @@ class Worker():
         notifyJM.log('pass', 'Start Proquest to ETDs processing')
         notifyJM.report('start')
 
+        self.logger.info('Checking for job_ticket_id in message')
         if "job_ticket_id" in message:
             job_ticket_id = message['job_ticket_id']
             notifyJM.log('pass', f'job_ticket_id {job_ticket_id}')
             self.logger.info(f'job_ticket_id {job_ticket_id}')
 
+        self.logger.info('Checking for aipFiles')
         aipFiles = self.get_files()
         if not aipFiles:
             notifyJM.log('pass', 'No files found in dropbox')
