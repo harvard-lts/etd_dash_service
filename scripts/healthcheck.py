@@ -18,6 +18,8 @@ DROPBOX_SERVER = os.getenv("dropboxServer")
 DROPBOX_USER = os.getenv("dropboxUser")
 PRIVATE_KEY_PATH = os.getenv("PRIVATE_KEY_PATH")
 SSH_PORT = 22
+JOBMON_URL = os.getenv("jobMonitor")
+INSTANCE = os.getenv("INSTANCE", "dev")
 
 # check dash
 try:
@@ -38,6 +40,20 @@ try:
 except Exception:
     print("Dropbox connection failed")
     sys.exit(1)
+
+# check jobmon if prod
+if INSTANCE == "prod":
+    if JOBMON_URL is None:
+        print("jobmon url not set")
+        sys.exit(1)
+    try:
+        r = requests.get(JOBMON_URL, verify=False)
+        if (r.status_code != 200):
+            print("jobmon healthcheck failed")
+            sys.exit(1)
+    except Exception:
+        print("jobmon healthcheck failed")
+        sys.exit(1)
 
 # check timestamp file
 try:
