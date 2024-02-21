@@ -23,11 +23,12 @@ def configure_logger():  # pragma: no cover
     console_handler.setFormatter(formatter)
 
     logger = logging.getLogger('etd_dash')
-    logger.addHandler(console_handler)
+    # logger.addHandler(console_handler)
     if os.getenv("CONSOLE_LOGGING_ONLY", "true") == "false":
         file_handler = TimedRotatingFileHandler(
-            filename=f"{log_file_path}/{container_id}_console_{timestamp}.log",
-            when=LOG_ROTATION,
+            filename=f"{log_file_path}/etd_dash.log",
+            when=m,
+            interval=5,
             backupCount=LOG_FILE_BACKUP_COUNT
         )
         file_handler.setFormatter(formatter)
