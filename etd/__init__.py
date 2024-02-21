@@ -27,7 +27,7 @@ def configure_logger():  # pragma: no cover
     if os.getenv("CONSOLE_LOGGING_ONLY", "true") == "false":
         file_handler = TimedRotatingFileHandler(
             filename=f"{log_file_path}/etd_dash.log",
-            when=m,
+            when='m',
             interval=5,
             backupCount=LOG_FILE_BACKUP_COUNT
         )
