@@ -90,6 +90,7 @@ class Worker():
 
         aipFiles = self.get_files()
         if not aipFiles:
+            self.logger.info('No files found in dropbox')
             notifyJM.log('pass', 'No files found in dropbox')
             notifyJM.report('complete')
             return True
