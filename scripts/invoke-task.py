@@ -10,10 +10,10 @@ app1 = Celery('tasks')
 app1.config_from_object('celeryconfig')
 
 arguments = {"job_ticket_id": job_ticket_id, "feature_flags": {
-            'dash_feature_flag': "on",
-            'alma_feature_flag': "on",
-            'send_to_drs_feature_flag': "off",
-            'drs_holding_record_feature_flag': "off"}}
+            'dash_feature_flag': os.getenv("DASH_FEATURE_FLAG"),
+            'alma_feature_flag': os.getenv("ALMA_FEATURE_FLAG"),
+            'send_to_drs_feature_flag':
+            os.getenv("SEND_TO_DRS_FEATURE_FLAG")}}
 
 res = app1.send_task('etd-dash-service.tasks.send_to_dash',
                      args=[arguments], kwargs={},
