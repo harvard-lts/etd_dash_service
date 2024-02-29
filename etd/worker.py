@@ -148,7 +148,7 @@ class Worker():
             if proc.returncode > 0:
                 notifyJM.log('fail', f"The command {zipWithArgs} \
                             failed in {aipDir}")
-                self.logger.info('fail', f"The command {zipWithArgs} \
+                self.logger.info(f"The command {zipWithArgs} \
                             failed in {aipDir}")
                 continue
 
