@@ -105,13 +105,6 @@ def send_to_dash(json_message):
                 worker = Worker()
                 msg = worker.send_to_dash(json_message)
                 logger.debug(msg)
-                if 'identifier' in json_message:
-                    proquest_identifier = json_message['identifier']
-                    new_message['identifier'] = proquest_identifier
-                    current_span.set_attribute("identifier",
-                                               proquest_identifier)
-                    logger.debug("processing id: " + str(proquest_identifier))
-
             else:
                 # Feature is off so do hello world
                 logger.debug("FEATURE FLAGS FOUND")
@@ -119,6 +112,11 @@ def send_to_dash(json_message):
                 current_span.add_event("FEATURE FLAGS FOUND")
                 current_span.add_event(json.dumps(json_message))
 
+        if 'identifier' in json_message:
+            proquest_identifier = json_message['identifier']
+            new_message['identifier'] = proquest_identifier
+            current_span.set_attribute("identifier", proquest_identifier)
+            logger.debug("processing id: " + str(proquest_identifier))
         # If only unit testing, return the message and
         # do not trigger the next task.
         if "unit_test" in json_message:
