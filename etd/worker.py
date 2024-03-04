@@ -186,6 +186,7 @@ class Worker():
             if self.check_for_duplicates(identifier):
                 self.logger.error(f'{identifier} is a duplicate')
                 notifyJM.log('fail', f'{identifier} is a duplicate')
+                current_span.add_event(f'{identifier} is a duplicate')
                 # form the dupe directory for the aip
                 dupe_dir = aipDir.replace('/in/', '/dupe/')
                 # append timestamp to the dupe_dir
