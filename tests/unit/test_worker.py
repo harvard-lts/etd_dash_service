@@ -151,13 +151,13 @@ class TestWorkerClass():
 
         assert doc.xpath("//dim:field[text()='2023-05']",
                          namespaces=namespace_mapping)[0].\
-            get('element') == "date"
+            get('element') == "degree"
         assert doc.xpath("//dim:field[text()='2023-05']",
                          namespaces=namespace_mapping)[0].\
-            get('mdschema') == "dc"
+            get('mdschema') == "thesis"
         assert doc.xpath("//dim:field[text()='2023-05']",
                          namespaces=namespace_mapping)[0].\
-            get('qualifier') == "submitted"
+            get('qualifier') == "date"
 
         assert doc.xpath("//dim:field[@qualifier='level']",
                          namespaces=namespace_mapping)[0].\
