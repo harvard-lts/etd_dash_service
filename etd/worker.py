@@ -493,14 +493,6 @@ class Worker():
         # Find and remapped fields
         for dimField in rootMets.iter(f'{self.dimNamespace}field'):
             if dimField.attrib['mdschema'] == 'dc':
-                #if dimField.attrib['element'] == 'date':
-                #    if dimField.attrib['qualifier'] == 'created':
-                #        dimField.attrib['mdschema'] = 'thesis'
-                #        dimField.attrib['element'] = 'degree'
-                #        dimField.attrib['qualifier'] = 'date'
-                #
-                #     elif dimField.attrib['qualifier'] == 'submitted':
-                #        dimField.attrib['qualifier'] = 'created'
 
                 if dimField.attrib['element'] == 'subject':
                     # if dimField.attrib['qualifier'] exists, and it's PQ,
@@ -534,10 +526,6 @@ class Worker():
 
             elif dimField.attrib['mdschema'] == 'thesis':
                 if dimField.attrib['element'] == 'degree':
-                    # if dimField.attrib['qualifier'] == 'date':
-                    #    dimField.attrib['mdschema'] = 'dc'
-                    #    dimField.attrib['element'] = 'date'
-                    #    dimField.attrib['qualifier'] = 'submitted'
 
                     if dimField.attrib['qualifier'] == 'name':
 
